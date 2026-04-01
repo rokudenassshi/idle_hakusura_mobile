@@ -29,36 +29,7 @@ const accessoryBases = [
   { name: '戦士の紋章', str: 3, hp: 10 },
 ];
 
-const dungeonMaster = {
-  meadow: {
-    key: 'meadow',
-    name: 'はじまりの草原',
-    desc: '初級向け。素早い小型モンスターが多い。',
-    rec: 'Lv 1+',
-    unlockLevel: 1,
-    enemyNames: ['スライム', 'ウサギオオカミ', '草原ゴブリン', 'ハチ', '角ネズミ'],
-    hpScale: 1.4,
-    atkScale: 1.35,
-    speedScale: 1.18,
-    expScale: 1.15,
-    goldScale: 1.1,
-    accessoryRate: 0.2,
-  },
-  cave: {
-    key: 'cave',
-    name: 'こだま洞窟',
-    desc: '中級向け。体力の高い敵と重い武器が出やすい。',
-    rec: 'Lv 6+',
-    unlockLevel: 6,
-    enemyNames: ['洞窟コウモリ', '岩トカゲ', '骨戦士', '洞窟オーク', '岩ゴーレム'],
-    hpScale: 1.95,
-    atkScale: 1.65,
-    speedScale: 1.05,
-    expScale: 1.55,
-    goldScale: 1.4,
-    accessoryRate: 0.14,
-  },
-};
+const dungeonMaster = DUNGEON_MASTER;
 
 
 const dungeonOrder = ['meadow', 'cave'];
@@ -189,7 +160,9 @@ function currentStage(sourceState = state) {
 }
 
 function setCurrentStage(value, sourceState = state) {
-  sourceState.dungeonProgress[currentDungeon(sourceState).key] = Math.max(1, Math.floor(value));
+  const dungeon = currentDungeon(sourceState);
+  const cappedStage = dungeon.finalStage ? Math.min(Math.floor(value), dungeon.finalStage) : Math.floor(value);
+  sourceState.dungeonProgress[dungeon.key] = Math.max(1, cappedStage);
 }
 
 function grantStarterItems(s) {
@@ -389,24 +362,44 @@ function ensureEnemy(force = false) {
   state.enemy = createEnemy(currentStage(), currentDungeon());
 }
 
+function dungeonEnemyTable(dungeon) {
+  const fallback = [{ key: 'unknown', name: 'モンスター', hp: 40, atk: 8, attackInterval: 1.3, exp: 7, gold: 6 }];
+  if (!dungeon?.enemyKeys?.length) return fallback;
+  const enemyTable = dungeon.enemyKeys.map((enemyKey) => ENEMY_MASTER[enemyKey]).filter(Boolean);
+  return enemyTable.length ? enemyTable : fallback;
+}
+
+function dungeonBossDef(dungeon) {
+  const fallback = { key: 'bossUnknown', name: `${dungeon.name}の主`, hp: 260, atk: 30, attackInterval: 1.6, exp: 48, gold: 44 };
+  if (!dungeon?.bossKey) return fallback;
+  return BOSS_MASTER[dungeon.bossKey] || fallback;
+}
+
 function createEnemy(stage, dungeon) {
   const tier = 1 + Math.floor((stage - 1) / 5);
-  const isBossFloor = stage >= 10 && !state.clearedDungeons[dungeon.key];
+  const finalStage = dungeon.finalStage || 10;
+  const isBossFloor = stage >= finalStage;
+  const enemyTable = dungeonEnemyTable(dungeon);
+  const enemyDef = isBossFloor
+    ? dungeonBossDef(dungeon)
+    : enemyTable[(stage + tier) % enemyTable.length];
   const rank = isBossFloor ? 'BOSS' : '';
   const rankMul = isBossFloor ? 2.7 : 1;
-  const baseHp = Math.floor((42 + stage * 20 + tier * 22) * rankMul * dungeon.hpScale);
-  const atkBase = Math.floor((7 + stage * 2.6 + tier * 3.1) * (isBossFloor ? 1.85 : 1) * dungeon.atkScale);
-  const bossName = `${dungeon.name}の主`;
+  const hpBase = enemyDef.hp + stage * 18 + tier * 10;
+  const atkBase = (enemyDef.atk + stage * 2.4 + tier * 1.8) * (isBossFloor ? 1.85 : 1);
+  const baseHp = Math.floor(hpBase * rankMul * dungeon.hpScale);
+  const baseExp = enemyDef.exp + stage * 2.6 + tier * 1.4;
+  const baseGold = enemyDef.gold + stage * 2.9 + tier * 1.1;
   return {
-    name: isBossFloor ? bossName : `${dungeon.enemyNames[(stage + tier) % dungeon.enemyNames.length]} ${stage}`,
+    name: isBossFloor ? enemyDef.name : `${enemyDef.name} ${stage}`,
     rank,
     maxHp: baseHp,
     hp: baseHp,
-    atkMin: Math.max(1, Math.floor(atkBase * 0.75)),
-    atkMax: Math.max(2, Math.floor(atkBase * 1.2)),
-    attackInterval: Math.max(0.55, (1.65 - stage * 0.018) / dungeon.speedScale),
-    exp: Math.floor((7 + stage * 2.8 * rankMul) * dungeon.expScale),
-    gold: Math.floor((6 + stage * 3.2 * rankMul) * dungeon.goldScale),
+    atkMin: Math.max(1, Math.floor(atkBase * dungeon.atkScale * 0.75)),
+    atkMax: Math.max(2, Math.floor(atkBase * dungeon.atkScale * 1.2)),
+    attackInterval: Math.max(0.55, enemyDef.attackInterval / dungeon.speedScale),
+    exp: Math.floor(baseExp * rankMul * dungeon.expScale),
+    gold: Math.floor(baseGold * rankMul * dungeon.goldScale),
     isBoss: isBossFloor,
   };
 }
@@ -482,15 +475,17 @@ function onEnemyDefeated() {
   }
 
   const dungeon = currentDungeon();
-  if (enemy.isBoss && !state.clearedDungeons[dungeon.key]) {
-    state.clearedDungeons[dungeon.key] = true;
-    state.autoBattle = false;
-    addLog(`${dungeon.name}をクリアした！`);
+  if (enemy.isBoss) {
+    if (!state.clearedDungeons[dungeon.key]) {
+      state.clearedDungeons[dungeon.key] = true;
+      state.autoBattle = false;
+      addLog(`${dungeon.name}をクリアした！`);
 
-    const nextKey = nextDungeonKey(dungeon.key);
-    if (nextKey && !state.unlockedDungeons[nextKey]) {
-      state.unlockedDungeons[nextKey] = true;
-      addLog(`${dungeonMaster[nextKey].name} が解放された！`);
+      const nextKey = nextDungeonKey(dungeon.key);
+      if (nextKey && !state.unlockedDungeons[nextKey]) {
+        state.unlockedDungeons[nextKey] = true;
+        addLog(`${dungeonMaster[nextKey].name} が解放された！`);
+      }
     }
   } else {
     setCurrentStage(currentStage() + 1);
@@ -529,11 +524,10 @@ function rollDrop() {
   if (Math.random() > 0.72) return null;
   const optionCount = rollOptionCount();
   const stage = currentStage();
-  const dungeon = currentDungeon();
   const roll = Math.random();
-  if (roll < dungeon.accessoryRate) return makeAccessory(state, stage, optionCount);
-  if (roll < dungeon.accessoryRate + 0.32) return makeArmor(state, stage, optionCount);
-  return makeWeapon(state, stage, optionCount);
+  if (roll < 1 / 3) return makeWeapon(state, stage, optionCount);
+  if (roll < 2 / 3) return makeArmor(state, stage, optionCount);
+  return makeAccessory(state, stage, optionCount);
 }
 
 function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
