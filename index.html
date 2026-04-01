@@ -4,7 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
   <title>放置ハクスラ</title>
-  <link rel="stylesheet" href="style.css" />
+  <script>
+    (function loadAssetsWithVersion() {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', `version.json?t=${Date.now()}`, false);
+      xhr.send(null);
+      const { version } = JSON.parse(xhr.responseText);
+      const encodedVersion = encodeURIComponent(version);
+      window.APP_VERSION = version;
+
+      document.write(`<link rel="stylesheet" href="style.css?v=${encodedVersion}">`);
+      document.write(`<script src="enemy.js?v=${encodedVersion}"><\/script>`);
+      document.write(`<script src="dungeon.js?v=${encodedVersion}"><\/script>`);
+      document.write(`<script src="game.js?v=${encodedVersion}"><\/script>`);
+    })();
+  </script>
 </head>
 <body>
   <div class="app">
@@ -173,9 +187,5 @@
       <div class="dungeon-card-name"></div>
     </button>
   </template>
-
-  <script src="enemy.js"></script>
-  <script src="dungeon.js"></script>
-  <script src="game.js"></script>
 </body>
 </html>
