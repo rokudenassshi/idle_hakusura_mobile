@@ -1,0 +1,1075 @@
+const SAVE_KEY = 'idle_hakusura_mobile_save_v7_option_rarity';
+
+const rarityTable = [
+  { key: 'common', label: 'コモン', optionCount: 1 },
+  { key: 'uncommon', label: 'アンコモン', optionCount: 2 },
+  { key: 'rare', label: 'レア', optionCount: 3 },
+  { key: 'epic', label: 'エピック', optionCount: 4 },
+  { key: 'legendary', label: 'レジェンダリー', optionCount: 5 },
+];
+
+const weaponBases = [
+  { name: 'ショートソード', weaponType: '剣', minAtk: 4, maxAtk: 8, attackInterval: 1.0, stat: 'str' },
+  { name: 'バトルアクス', weaponType: '斧', minAtk: 7, maxAtk: 12, attackInterval: 2.0, stat: 'str' },
+  { name: 'ダガー', weaponType: '短剣', minAtk: 3, maxAtk: 6, attackInterval: 0.8, stat: 'agi' },
+  { name: 'ワンド', weaponType: '杖', minAtk: 3, maxAtk: 7, attackInterval: 1.2, stat: 'int' },
+];
+
+const armorBases = [
+  { name: 'レザーアーマー', minDef: 2, maxDef: 4, hp: 14, stat: 'vit' },
+  { name: 'チェインメイル', minDef: 4, maxDef: 7, hp: 22, stat: 'str' },
+  { name: 'ミスリルアーマー', minDef: 6, maxDef: 10, hp: 30, stat: 'vit' },
+  { name: 'ローブ', minDef: 1, maxDef: 3, hp: 10, stat: 'int' },
+];
+
+const accessoryBases = [
+  { name: '生命の指輪', hp: 22, vit: 2 },
+  { name: '俊足のお守り', agi: 4, def: 1 },
+  { name: '賢者のペンダント', int: 3, def: 1, hp: 8 },
+  { name: '戦士の紋章', str: 3, hp: 10 },
+];
+
+const dungeonMaster = {
+  meadow: {
+    key: 'meadow',
+    name: 'はじまりの草原',
+    desc: '初級向け。素早い小型モンスターが多い。',
+    rec: 'Lv 1+',
+    unlockLevel: 1,
+    enemyNames: ['スライム', 'ウサギオオカミ', '草原ゴブリン', 'ハチ', '角ネズミ'],
+    hpScale: 1.4,
+    atkScale: 1.35,
+    speedScale: 1.18,
+    expScale: 1.15,
+    goldScale: 1.1,
+    accessoryRate: 0.2,
+  },
+  cave: {
+    key: 'cave',
+    name: 'こだま洞窟',
+    desc: '中級向け。体力の高い敵と重い武器が出やすい。',
+    rec: 'Lv 6+',
+    unlockLevel: 6,
+    enemyNames: ['洞窟コウモリ', '岩トカゲ', '骨戦士', '洞窟オーク', '岩ゴーレム'],
+    hpScale: 1.95,
+    atkScale: 1.65,
+    speedScale: 1.05,
+    expScale: 1.55,
+    goldScale: 1.4,
+    accessoryRate: 0.14,
+  },
+};
+
+
+const dungeonOrder = ['meadow', 'cave'];
+
+function rarityByOptionCount(optionCount) {
+  return rarityTable.find((r) => r.optionCount === optionCount) || rarityTable[0];
+}
+
+function rollOptionCount() {
+  const roll = Math.random();
+  if (roll < 0.58) return 1;
+  if (roll < 0.83) return 2;
+  if (roll < 0.95) return 3;
+  if (roll < 0.992) return 4;
+  return 5;
+}
+
+function makeOptionPool(slot) {
+  if (slot === 'weapon') {
+    return [
+      { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
+      { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
+      { key: 'int', label: 'かしこさ', min: 1, max: 4, scale: 0.16 },
+      { key: 'atk', label: '攻撃', min: 1, max: 6, scale: 0.22 },
+      { key: 'def', label: '防御', min: 1, max: 3, scale: 0.12 },
+    ];
+  }
+  if (slot === 'armor') {
+    return [
+      { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
+      { key: 'str', label: 'ちから', min: 1, max: 3, scale: 0.12 },
+      { key: 'int', label: 'かしこさ', min: 1, max: 3, scale: 0.12 },
+      { key: 'hp', label: 'HP', min: 6, max: 18, scale: 0.3 },
+      { key: 'def', label: '防御', min: 1, max: 5, scale: 0.2 },
+    ];
+  }
+  return [
+    { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
+    { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
+    { key: 'int', label: 'かしこさ', min: 1, max: 4, scale: 0.16 },
+    { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
+    { key: 'hp', label: 'HP', min: 5, max: 16, scale: 0.26 },
+    { key: 'def', label: '防御', min: 1, max: 4, scale: 0.16 },
+  ];
+}
+
+function randomOptionValue(def, stage) {
+  return Math.max(1, rand(def.min, def.max) + Math.floor(stage * def.scale));
+}
+
+function applyRandomOptions(item, stage, optionCount) {
+  const pool = [...makeOptionPool(item.slot)];
+  item.options = [];
+  for (let i = 0; i < optionCount && pool.length; i += 1) {
+    const index = rand(0, pool.length - 1);
+    const def = pool.splice(index, 1)[0];
+    const value = randomOptionValue(def, stage);
+    item[def.key] = (item[def.key] || 0) + value;
+    item.options.push({ key: def.key, label: def.label, value });
+  }
+  const rarity = rarityByOptionCount(item.options.length);
+  item.rarityKey = rarity.key;
+  item.rarity = rarity.label;
+  item.optionCount = item.options.length;
+}
+
+
+function nextDungeonKey(key) {
+  const index = dungeonOrder.indexOf(key);
+  return index >= 0 ? dungeonOrder[index + 1] ?? null : null;
+}
+
+let state = loadGame() ?? createInitialState();
+let els = {};
+let playerAttackCooldown = 0;
+let enemyAttackCooldown = 0;
+let battleTimer = null;
+const pendingLogs = [];
+let currentTab = 'dungeon';
+const dirty = { battle: true, dungeon: true, bag: true, equipment: true, status: true, options: true, visibility: true };
+function markDirty(...keys) { keys.forEach((key) => { if (key in dirty) dirty[key] = true; }); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  els = mapElements();
+  currentTab = document.querySelector('.tab.active')?.dataset.tab || 'dungeon';
+  bindEvents();
+  flushPendingLogs();
+  ensureEnemy(true);
+  addLog(`冒険開始。${currentDungeon().name} に挑もう。`);
+  renderAll();
+  startLoop();
+});
+
+function createInitialState() {
+  const base = {
+    autoBattle: false,
+    gold: 0,
+    kills: 0,
+    currentDungeon: 'meadow',
+    unlockedDungeons: { meadow: true, cave: false },
+    clearedDungeons: { meadow: false, cave: false },
+    dungeonProgress: { meadow: 1, cave: 1 },
+    player: {
+      level: 1,
+      exp: 0,
+      expToNext: 15,
+      statPoints: 0,
+      stats: { str: 5, vit: 5, int: 5, agi: 5 },
+      hp: 0,
+      maxHp: 0,
+    },
+    enemy: null,
+    bag: [],
+    equipment: { weapon: null, armor: null, accessory: null },
+    lastItemId: 0,
+  };
+  grantStarterItems(base);
+  recalcPlayer(base);
+  base.player.hp = base.player.maxHp;
+  return base;
+}
+
+function currentDungeon(sourceState = state) {
+  return dungeonMaster[sourceState.currentDungeon] || dungeonMaster.meadow;
+}
+
+function currentStage(sourceState = state) {
+  return sourceState.dungeonProgress[currentDungeon(sourceState).key];
+}
+
+function setCurrentStage(value, sourceState = state) {
+  sourceState.dungeonProgress[currentDungeon(sourceState).key] = Math.max(1, Math.floor(value));
+}
+
+function grantStarterItems(s) {
+  const starterSword = makeWeapon(s, 1, 1, weaponBases[0]);
+  const starterArmor = makeArmor(s, 1, 1, armorBases[0]);
+  const starterCharm = makeAccessory(s, 1, 1, accessoryBases[0]);
+  s.bag.push(starterSword, starterArmor, starterCharm);
+  s.equipment.weapon = starterSword.id;
+  s.equipment.armor = starterArmor.id;
+  s.equipment.accessory = starterCharm.id;
+}
+
+function mapElements() {
+  const byId = (id) => document.getElementById(id);
+  return {
+    heroCard: byId('heroCard'),
+    dungeonNameLabel: byId('dungeonNameLabel'),
+    dungeonLevelText: byId('dungeonLevelText'),
+    dungeonList: byId('dungeonList'),
+    stageLabel: byId('stageLabel'),
+    playerHpText: byId('playerHpText'),
+    playerHpBar: byId('playerHpBar'),
+    enemyHpText: byId('enemyHpText'),
+    enemyHpBar: byId('enemyHpBar'),
+    expText: byId('expText'),
+    expBar: byId('expBar'),
+    toggleBattleBtn: byId('toggleBattleBtn'),
+    levelText: byId('levelText'),
+    playerLevelTop: byId('playerLevelTop'),
+    goldText: byId('goldText'),
+    dpsText: byId('dpsText'),
+    attackSpeedText: byId('attackSpeedText'),
+    dpsTextInfo: byId('dpsTextInfo'),
+    attackSpeedTextInfo: byId('attackSpeedTextInfo'),
+    enemyNameText: byId('enemyNameText'),
+    enemyRankText: byId('enemyRankText'),
+    enemyAtkText: byId('enemyAtkText'),
+    enemyRewardText: byId('enemyRewardText'),
+    enemyNameTextInfo: byId('enemyNameTextInfo'),
+    enemyAttackSpeedTextInfo: byId('enemyAttackSpeedTextInfo'),
+    enemyRankTextInfo: byId('enemyRankTextInfo'),
+    enemyAtkTextInfo: byId('enemyAtkTextInfo'),
+    enemyRewardTextInfo: byId('enemyRewardTextInfo'),
+    log: byId('log'),
+    battleLog: byId('battleLog'),
+    battleLogPanel: byId('battleLogPanel'),
+    statusLevel: byId('statusLevel'),
+    killCountText: byId('killCountText'),
+    maxHpText: byId('maxHpText'),
+    defText: byId('defText'),
+    atkText: byId('atkText'),
+    intPowerText: byId('intPowerText'),
+    critText: byId('critText'),
+    evaText: byId('evaText'),
+    pointsText: byId('pointsText'),
+    statList: byId('statList'),
+    equipWeaponBtn: byId('equipWeaponBtn'),
+    equipArmorBtn: byId('equipArmorBtn'),
+    equipAccessoryBtn: byId('equipAccessoryBtn'),
+    bagList: byId('bagList'),
+    bagCountText: byId('bagCountText'),
+    statusDungeonText: byId('statusDungeonText'),
+    optionDungeonText: byId('optionDungeonText'),
+    optionStageText: byId('optionStageText'),
+    optionBattleText: byId('optionBattleText'),
+    optionGoldText: byId('optionGoldText'),
+    saveBtn: byId('saveBtn'),
+    resetBtn: byId('resetBtn'),
+    itemCardTemplate: byId('itemCardTemplate'),
+    dungeonCardTemplate: byId('dungeonCardTemplate'),
+  };
+}
+
+function bindEvents() {
+  document.querySelectorAll('.tab').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      currentTab = btn.dataset.tab;
+      activateTab(currentTab);
+      markDirty('visibility', currentTab, 'equipment');
+      renderAll();
+    });
+  });
+
+  els.bagList?.addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const itemId = Number(button.dataset.itemId);
+    const action = button.dataset.action;
+    if (!itemId || !action) return;
+
+    if (action === 'equip-weapon') equipItem(itemId, 'weapon');
+    else if (action === 'equip-armor') equipItem(itemId, 'armor');
+    else if (action === 'equip-accessory') equipItem(itemId, 'accessory');
+    else if (action === 'sell') sellItem(itemId);
+  });
+
+  els.toggleBattleBtn?.addEventListener('click', toggleBattle);
+  els.saveBtn?.addEventListener('click', () => {
+    saveGame();
+    addLog('セーブしました。');
+  });
+
+  els.resetBtn?.addEventListener('click', () => {
+    if (!confirm('セーブデータを削除して最初から始めますか？')) return;
+    localStorage.removeItem(SAVE_KEY);
+    location.reload();
+  });
+}
+
+function startLoop() {
+  let last = performance.now();
+  if (battleTimer) clearInterval(battleTimer);
+  battleTimer = setInterval(saveGame, 10000);
+
+  function frame(now) {
+    const delta = Math.min((now - last) / 1000, 0.1);
+    last = now;
+    tick(delta);
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function tick(delta) {
+  if (!state.autoBattle) {
+    if (dirty.battle) {
+      renderBattleSummary();
+      dirty.battle = false;
+    }
+    return;
+  }
+
+  ensureEnemy();
+  if (!state.enemy) {
+    markDirty('battle');
+    renderBattleSummary();
+    dirty.battle = false;
+    return;
+  }
+
+  playerAttackCooldown -= delta;
+  enemyAttackCooldown -= delta;
+  const pStats = getDerivedStats(state);
+  let changed = false;
+
+  if (playerAttackCooldown <= 0 && state.enemy.hp > 0) {
+    const damage = computePlayerDamage(pStats);
+    state.enemy.hp = Math.max(0, state.enemy.hp - damage);
+    addLog(`あなたの攻撃！ ${state.enemy.name} に ${damage} ダメージ。`);
+    playerAttackCooldown += 1 / Math.max(0.2, pStats.attackSpeed);
+    changed = true;
+    if (state.enemy.hp <= 0) {
+      onEnemyDefeated();
+      changed = true;
+    }
+  }
+
+  if (state.enemy && state.enemy.hp > 0 && enemyAttackCooldown <= 0) {
+    const raw = rand(state.enemy.atkMin, state.enemy.atkMax);
+    const evaded = Math.random() < pStats.evasion;
+    if (evaded) {
+      addLog('敵の攻撃を回避した。');
+    } else {
+      const damage = Math.max(1, Math.floor(raw - pStats.def));
+      state.player.hp = Math.max(0, state.player.hp - damage);
+      addLog(`${state.enemy.name} の攻撃！ ${damage} ダメージ。`);
+    }
+    enemyAttackCooldown += state.enemy.attackInterval;
+    changed = true;
+    if (state.player.hp <= 0) {
+      onPlayerDefeated();
+      changed = true;
+    }
+  }
+
+  if (changed || dirty.battle) {
+    renderBattleSummary();
+    dirty.battle = false;
+  }
+}
+
+function toggleBattle() {
+  state.autoBattle = !state.autoBattle;
+  playerAttackCooldown = 0;
+  enemyAttackCooldown = 0;
+  addLog(state.autoBattle ? '自動戦闘を開始。' : '自動戦闘を停止。');
+  if (state.autoBattle) {
+    ensureEnemy();
+  }
+  markDirty('battle', 'visibility', 'options');
+  renderAll();
+}
+
+function ensureEnemy(force = false) {
+  if (state.enemy && state.enemy.hp > 0 && !force) return;
+  state.enemy = createEnemy(currentStage(), currentDungeon());
+}
+
+function createEnemy(stage, dungeon) {
+  const tier = 1 + Math.floor((stage - 1) / 5);
+  const isBossFloor = stage >= 10 && !state.clearedDungeons[dungeon.key];
+  const rank = isBossFloor ? 'BOSS' : '';
+  const rankMul = isBossFloor ? 2.7 : 1;
+  const baseHp = Math.floor((42 + stage * 20 + tier * 22) * rankMul * dungeon.hpScale);
+  const atkBase = Math.floor((7 + stage * 2.6 + tier * 3.1) * (isBossFloor ? 1.85 : 1) * dungeon.atkScale);
+  const bossName = `${dungeon.name}の主`;
+  return {
+    name: isBossFloor ? bossName : `${dungeon.enemyNames[(stage + tier) % dungeon.enemyNames.length]} ${stage}`,
+    rank,
+    maxHp: baseHp,
+    hp: baseHp,
+    atkMin: Math.max(1, Math.floor(atkBase * 0.75)),
+    atkMax: Math.max(2, Math.floor(atkBase * 1.2)),
+    attackInterval: Math.max(0.55, (1.65 - stage * 0.018) / dungeon.speedScale),
+    exp: Math.floor((7 + stage * 2.8 * rankMul) * dungeon.expScale),
+    gold: Math.floor((6 + stage * 3.2 * rankMul) * dungeon.goldScale),
+    isBoss: isBossFloor,
+  };
+}
+
+function getEquippedItems(sourceState = state) {
+  return ['weapon', 'armor', 'accessory']
+    .map((slot) => getItemById(sourceState.equipment[slot], sourceState))
+    .filter(Boolean);
+}
+
+function getDerivedStats(sourceState = state) {
+  const baseStats = sourceState.player.stats;
+  const equipItems = getEquippedItems(sourceState);
+  const equipAtk = equipItems.reduce((sum, item) => sum + item.atk, 0);
+  const equipHp = equipItems.reduce((sum, item) => sum + item.hp, 0);
+  const equipDef = equipItems.reduce((sum, item) => sum + item.def, 0);
+  const bonusStr = equipItems.reduce((sum, item) => sum + item.str, 0);
+  const bonusVit = equipItems.reduce((sum, item) => sum + item.vit, 0);
+  const bonusInt = equipItems.reduce((sum, item) => sum + item.int, 0);
+  const bonusAgi = equipItems.reduce((sum, item) => sum + item.agi, 0);
+
+  const str = baseStats.str + bonusStr;
+  const vit = baseStats.vit + bonusVit;
+  const int = baseStats.int + bonusInt;
+  const agi = baseStats.agi + bonusAgi;
+  const equippedWeapon = equipItems.find((item) => item.slot === 'weapon');
+  const attackInterval = equippedWeapon?.attackInterval || 1.2;
+  const attackSpeed = 1 / Math.max(0.2, attackInterval);
+
+  return {
+    str,
+    vit,
+    int,
+    agi,
+    maxHp: 30 + vit * 5 + equipHp,
+    def: Math.floor(vit * 0.7 + agi * 0.2 + equipDef),
+    attackPower: Math.floor(str * 2.4 + equipAtk),
+    attackSpeed,
+    attackInterval,
+    crit: Math.min(0.45, 0.03 + agi * 0.004),
+    evasion: Math.min(0.35, 0.02 + agi * 0.003),
+  };
+}
+
+function recalcPlayer(sourceState = state) {
+  const derived = getDerivedStats(sourceState);
+  sourceState.player.maxHp = derived.maxHp;
+  sourceState.player.hp = Math.max(1, Math.min(sourceState.player.hp || derived.maxHp, derived.maxHp));
+}
+
+function computePlayerDamage(pStats) {
+  let damage = rand(Math.floor(pStats.attackPower * 0.75), Math.floor(pStats.attackPower * 1.15));
+  if (Math.random() < pStats.crit) {
+    damage = Math.floor(damage * 1.7);
+    addLog('会心の一撃！');
+  }
+  return Math.max(1, damage);
+}
+
+function onEnemyDefeated() {
+  const enemy = state.enemy;
+  if (!enemy) return;
+
+  state.gold += enemy.gold;
+  state.kills += 1;
+  gainExp(enemy.exp);
+  addLog(`${enemy.name} を倒した！ ${enemy.gold}G と ${enemy.exp}EXP を獲得。`);
+
+  const drop = rollDrop();
+  if (drop) {
+    state.bag.unshift(drop);
+    addLog(`ドロップ: ${bagItemName(drop)} を入手！`);
+  }
+
+  const dungeon = currentDungeon();
+  if (enemy.isBoss && !state.clearedDungeons[dungeon.key]) {
+    state.clearedDungeons[dungeon.key] = true;
+    state.autoBattle = false;
+    addLog(`${dungeon.name}をクリアした！`);
+
+    const nextKey = nextDungeonKey(dungeon.key);
+    if (nextKey && !state.unlockedDungeons[nextKey]) {
+      state.unlockedDungeons[nextKey] = true;
+      addLog(`${dungeonMaster[nextKey].name} が解放された！`);
+    }
+  } else {
+    setCurrentStage(currentStage() + 1);
+    addLog(`${dungeon.name} の ${currentStage()} 階へ進んだ。`);
+  }
+
+  state.enemy = null;
+  if (state.autoBattle) {
+    ensureEnemy(true);
+  }
+  markDirty('battle', 'bag', 'equipment', 'status', 'options', 'dungeon');
+}
+
+function onPlayerDefeated() {
+  state.autoBattle = false;
+  state.player.hp = Math.max(1, Math.floor(state.player.maxHp * 0.5));
+  addLog('力尽きた……。HPを半分回復して戦闘停止。');
+  markDirty('battle', 'visibility', 'options');
+  renderAll();
+}
+
+function gainExp(amount) {
+  state.player.exp += amount;
+  while (state.player.exp >= state.player.expToNext) {
+    state.player.exp -= state.player.expToNext;
+    state.player.level += 1;
+    state.player.statPoints += 4;
+    state.player.expToNext = Math.floor(state.player.expToNext * 1.25 + 8);
+    recalcPlayer(state);
+    state.player.hp = state.player.maxHp;
+    addLog(`レベルアップ！ Lv${state.player.level} になり、ステータスポイントを4獲得。`);
+  }
+}
+
+function rollDrop() {
+  if (Math.random() > 0.72) return null;
+  const optionCount = rollOptionCount();
+  const stage = currentStage();
+  const dungeon = currentDungeon();
+  const roll = Math.random();
+  if (roll < dungeon.accessoryRate) return makeAccessory(state, stage, optionCount);
+  if (roll < dungeon.accessoryRate + 0.32) return makeArmor(state, stage, optionCount);
+  return makeWeapon(state, stage, optionCount);
+}
+
+function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
+  const basePool = currentDungeon(sourceState).key === 'cave'
+    ? [weaponBases[1], weaponBases[0], weaponBases[3], weaponBases[2]]
+    : weaponBases;
+  const base = forcedBase || basePool[rand(0, basePool.length - 1)];
+  const scale = 1 + stage * 0.11;
+
+  const item = {
+    id: ++sourceState.lastItemId,
+    slot: 'weapon',
+    rarity: '',
+    rarityKey: 'common',
+    optionCount: 0,
+    options: [],
+    name: base.name,
+    baseName: base.name,
+    atk: Math.floor(rand(base.minAtk, base.maxAtk) * scale),
+    speed: 0,
+    attackInterval: base.attackInterval,
+    hp: 0,
+    def: 0,
+    str: 0,
+    vit: 0,
+    int: 0,
+    agi: 0,
+    price: Math.floor(rand(base.minAtk, base.maxAtk) * 6 * scale),
+    itemType: base.name,
+    weaponType: base.weaponType,
+  };
+  applyRandomOptions(item, stage, optionCount);
+  item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
+  return item;
+}
+
+function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
+  const base = forcedBase || armorBases[rand(0, armorBases.length - 1)];
+  const scale = 1 + stage * 0.09;
+
+  const item = {
+    id: ++sourceState.lastItemId,
+    slot: 'armor',
+    rarity: '',
+    rarityKey: 'common',
+    optionCount: 0,
+    options: [],
+    name: base.name,
+    baseName: base.name,
+    atk: 0,
+    speed: 0,
+    hp: Math.floor(base.hp * scale),
+    def: Math.max(1, Math.floor(rand(base.minDef, base.maxDef) * scale)),
+    str: 0,
+    vit: 0,
+    int: 0,
+    agi: 0,
+    price: Math.floor((base.hp + base.maxDef * 16) * scale),
+    itemType: base.name,
+    armorType: '防具',
+  };
+  applyRandomOptions(item, stage, optionCount);
+  item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
+  return item;
+}
+
+function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
+  const base = forcedBase || accessoryBases[rand(0, accessoryBases.length - 1)];
+  const scale = 1 + stage * 0.1;
+
+  const item = {
+    id: ++sourceState.lastItemId,
+    slot: 'accessory',
+    rarity: '',
+    rarityKey: 'common',
+    optionCount: 0,
+    options: [],
+    name: base.name,
+    baseName: base.name,
+    atk: 0,
+    speed: 0,
+    hp: Math.floor((base.hp || 0) * scale),
+    def: Math.floor((base.def || 0) * scale),
+    str: Math.floor((base.str || 0) * scale),
+    vit: Math.floor((base.vit || 0) * scale),
+    int: Math.floor((base.int || 0) * scale),
+    agi: Math.floor((base.agi || 0) * scale),
+    price: Math.floor(((base.hp || 0) + (base.def || 0) * 8 + 20) * scale),
+    itemType: base.name,
+  };
+  applyRandomOptions(item, stage, optionCount);
+  item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
+  return item;
+}
+
+function getItemById(id, sourceState = state) {
+  if (!id) return null;
+  return sourceState.bag.find((item) => item.id === id) || null;
+}
+
+function canEquip(item, slot) {
+  if (!item) return false;
+  if (slot === 'weapon') return item.slot === 'weapon';
+  if (slot === 'armor') return item.slot === 'armor';
+  if (slot === 'accessory') return item.slot === 'accessory';
+  return false;
+}
+
+function equipItem(itemId, slot) {
+  const item = getItemById(itemId);
+  if (!canEquip(item, slot)) return;
+  state.equipment[slot] = itemId;
+  recalcPlayer(state);
+  addLog(`${slotLabel(slot)} に ${bagItemName(item)} を装備。`);
+  markDirty('bag', 'equipment', 'status', 'battle', 'options');
+  renderAll();
+}
+
+function sellItem(itemId) {
+  if (Object.values(state.equipment).includes(itemId)) {
+    addLog('装備中のアイテムは売却できません。');
+    return;
+  }
+  const index = state.bag.findIndex((item) => item.id === itemId);
+  if (index < 0) return;
+  const [item] = state.bag.splice(index, 1);
+  state.gold += Math.max(1, Math.floor(item.price * 0.5));
+  addLog(`${bagItemName(item)} を売却した。`);
+  markDirty('bag', 'equipment', 'options');
+  renderAll();
+}
+
+function addStat(statKey) {
+  if (state.player.statPoints <= 0) return;
+  if (!(statKey in state.player.stats)) return;
+  state.player.stats[statKey] += 1;
+  state.player.statPoints -= 1;
+  recalcPlayer(state);
+  markDirty('status', 'battle', 'options');
+  renderAll();
+}
+
+function selectDungeon(key) {
+  const dungeon = dungeonMaster[key];
+  if (!dungeon) return;
+  if (!state.unlockedDungeons[dungeon.key]) {
+    addLog(`${dungeon.name} はまだ解放されていない。`);
+    return;
+  }
+  if (state.autoBattle) {
+    addLog('戦闘中はダンジョンを変更できません。');
+    return;
+  }
+
+  if (state.currentDungeon !== key) {
+    clearLogs();
+  }
+  state.currentDungeon = key;
+  state.dungeonProgress[key] = 1;
+  state.enemy = null;
+  playerAttackCooldown = 0;
+  enemyAttackCooldown = 0;
+  recalcPlayer(state);
+  state.player.hp = state.player.maxHp;
+  state.autoBattle = true;
+  addLog(`ダンジョンを ${dungeon.name} に変更。`);
+  addLog('1階から探索を開始。');
+  addLog('HPが全回復した。');
+  addLog('自動戦闘を開始。');
+  ensureEnemy(true);
+  markDirty('battle', 'dungeon', 'status', 'equipment', 'bag', 'options', 'visibility');
+  renderAll();
+}
+
+function clearLogs() {
+  pendingLogs.length = 0;
+  if (els.log) {
+    els.log.innerHTML = '';
+  }
+  if (els.battleLog) {
+    els.battleLog.innerHTML = '';
+  }
+}
+
+function setText(el, value) {
+  if (el) el.textContent = String(value);
+}
+
+function setWidth(el, value) {
+  if (el) el.style.width = value;
+}
+
+function renderAll() {
+  recalcPlayer(state);
+  updateTabVisibility();
+
+  if (dirty.battle) {
+    renderBattleSummary();
+    dirty.battle = false;
+  }
+
+  if ((currentTab === 'dungeon' && dirty.dungeon) || dirty.visibility) {
+    renderDungeons();
+    dirty.dungeon = false;
+  }
+
+  if ((currentTab === 'status' && dirty.status) || dirty.visibility) {
+    renderStatus();
+    dirty.status = false;
+  }
+
+  if ((currentTab === 'bag' && (dirty.bag || dirty.equipment)) || dirty.visibility) {
+    renderEquipment();
+    renderBag();
+    dirty.equipment = false;
+    dirty.bag = false;
+  }
+
+  if ((currentTab === 'options' && dirty.options) || dirty.visibility) {
+    renderOptions();
+    dirty.options = false;
+  }
+
+  dirty.visibility = false;
+}
+
+function updateTabVisibility() {
+  const inBattle = state.autoBattle;
+  const tabsRoot = document.querySelector('.tabs');
+  tabsRoot?.classList.toggle('hidden', inBattle);
+  els.heroCard?.classList.toggle('hidden', !inBattle);
+
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.classList.toggle('hidden', inBattle);
+  });
+
+  document.querySelectorAll('.panel').forEach((panel) => {
+    panel.classList.toggle('hidden', inBattle);
+  });
+
+  els.battleLogPanel?.classList.toggle('hidden', !inBattle);
+
+  if (!inBattle) {
+    activateTab(currentTab);
+  }
+}
+
+function activateTab(tabName) {
+  currentTab = tabName;
+  document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+  const tabButton = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  const targetPanel = document.getElementById(`tab-${tabName}`);
+  tabButton?.classList.add('active');
+  targetPanel?.classList.add('active');
+}
+
+function renderBattleSummary() {
+  if (!els.dungeonNameLabel) return;
+  const stats = getDerivedStats(state);
+  const inBattle = state.autoBattle;
+  const attackSpeedLabel = `${stats.attackInterval.toFixed(2)}秒/回`;
+  const dpsValue = Math.floor(stats.attackPower / Math.max(0.2, stats.attackInterval));
+  const playerHpRate = state.player.maxHp > 0 ? (state.player.hp / state.player.maxHp) * 100 : 0;
+  const expRate = state.player.expToNext > 0 ? (state.player.exp / state.player.expToNext) * 100 : 0;
+
+  setText(els.dungeonNameLabel, currentDungeon().name);
+  setText(els.dungeonLevelText, currentDungeon().rec);
+  setText(els.stageLabel, currentStage());
+  setText(els.playerHpText, `${Math.floor(state.player.hp)} / ${state.player.maxHp}`);
+  setWidth(els.playerHpBar, `${playerHpRate}%`);
+  setText(els.expText, `${state.player.exp} / ${state.player.expToNext}`);
+  setWidth(els.expBar, `${expRate}%`);
+  setText(els.toggleBattleBtn, state.autoBattle ? '戦闘停止' : '戦闘開始');
+  setText(els.levelText, state.player.level);
+  setText(els.playerLevelTop, state.player.level);
+  setText(els.goldText, state.gold);
+  setText(els.attackSpeedText, attackSpeedLabel);
+  setText(els.attackSpeedTextInfo, attackSpeedLabel);
+  setText(els.dpsText, dpsValue);
+  setText(els.dpsTextInfo, dpsValue);
+  setText(els.killCountText, state.kills);
+
+  document.querySelector('.battle-panel')?.classList.toggle('hidden', !inBattle);
+
+  if (inBattle) {
+    ensureEnemy();
+  }
+
+  if (state.enemy && inBattle) {
+    const enemyHpRate = state.enemy.maxHp > 0 ? (state.enemy.hp / state.enemy.maxHp) * 100 : 0;
+    const enemyAttackSpeedLabel = `${state.enemy.attackInterval.toFixed(2)}秒/回`;
+    setText(els.enemyHpText, `${Math.floor(state.enemy.hp)} / ${state.enemy.maxHp}`);
+    setWidth(els.enemyHpBar, `${enemyHpRate}%`);
+    setText(els.enemyNameText, state.enemy.name);
+    setText(els.enemyNameTextInfo, state.enemy.name);
+    setText(els.enemyAttackSpeedTextInfo, enemyAttackSpeedLabel);
+    setText(els.enemyRankText, state.enemy.rank);
+    setText(els.enemyRankTextInfo, state.enemy.rank);
+  } else {
+    setText(els.enemyHpText, '-');
+    setWidth(els.enemyHpBar, '0%');
+    setText(els.enemyNameText, '-');
+    setText(els.enemyNameTextInfo, '-');
+    setText(els.enemyAttackSpeedTextInfo, '-');
+    setText(els.enemyRankText, '-');
+    setText(els.enemyRankTextInfo, '-');
+  }
+}
+
+function renderDungeons() {
+  if (!els.dungeonList || !els.dungeonCardTemplate) return;
+  const fragment = document.createDocumentFragment();
+
+  Object.values(dungeonMaster).forEach((dungeon) => {
+    const node = els.dungeonCardTemplate.content.firstElementChild.cloneNode(true);
+    const unlocked = !!state.unlockedDungeons[dungeon.key];
+
+    node.classList.toggle('active', dungeon.key === state.currentDungeon);
+    node.classList.toggle('locked', !unlocked);
+    node.querySelector('.dungeon-card-name').textContent = dungeon.name;
+    node.addEventListener('click', () => selectDungeon(dungeon.key));
+    fragment.appendChild(node);
+  });
+
+  els.dungeonList.replaceChildren(fragment);
+}
+
+function renderStatus() {
+  if (!els.statusLevel || !els.statList) return;
+  const stats = getDerivedStats(state);
+  const statDefs = [
+    ['str', 'ちから', '物理攻撃が上がる'],
+    ['vit', 'たいりょく', '最大HPと防御が上がる'],
+    ['int', 'かしこさ', '装備の補助ステータス'],
+    ['agi', 'すばやさ', '回避率と会心率が上がる'],
+  ];
+
+  els.statusLevel.textContent = state.player.level;
+  els.maxHpText.textContent = stats.maxHp;
+  els.defText.textContent = stats.def;
+  els.atkText.textContent = stats.attackPower;
+  els.intPowerText.textContent = stats.int;
+  els.critText.textContent = `${Math.floor(stats.crit * 100)}%`;
+  els.evaText.textContent = `${Math.floor(stats.evasion * 100)}%`;
+  els.pointsText.textContent = state.player.statPoints;
+  els.statusDungeonText.textContent = currentDungeon().name;
+  els.statList.innerHTML = '';
+
+  statDefs.forEach(([key, label, desc]) => {
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `
+      <div>
+        <div class="stat-name">${label}</div>
+        <div class="stat-desc">${desc}</div>
+      </div>
+      <strong>${state.player.stats[key]}</strong>
+      <button class="plus-btn">+1</button>
+    `;
+    const button = row.querySelector('button');
+    button.disabled = state.player.statPoints <= 0;
+    button.addEventListener('click', () => addStat(key));
+    els.statList.appendChild(row);
+  });
+}
+
+function renderEquipment() {
+  if (!els.equipWeaponBtn) return;
+  const weapon = getItemById(state.equipment.weapon);
+  const armor = getItemById(state.equipment.armor);
+  const accessory = getItemById(state.equipment.accessory);
+  els.equipWeaponBtn.textContent = weapon ? bagItemName(weapon) : '未装備';
+  els.equipArmorBtn.textContent = armor ? bagItemName(armor) : '未装備';
+  els.equipAccessoryBtn.textContent = accessory ? bagItemName(accessory) : '未装備';
+}
+
+function renderBag() {
+  if (!els.bagList) return;
+  els.bagCountText.textContent = state.bag.length;
+
+  if (!state.bag.length) {
+    els.bagList.innerHTML = '<div class="empty">バッグは空です。</div>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+
+  state.bag.forEach((item) => {
+    const actions = [];
+    if (item.slot === 'weapon') {
+      actions.push(actionButton('武器装備', 'equip-weapon', item.id));
+    } else if (item.slot === 'armor') {
+      actions.push(actionButton('防具装備', 'equip-armor', item.id));
+    } else {
+      actions.push(actionButton('装飾品装備', 'equip-accessory', item.id));
+    }
+    actions.push(actionButton('売却', 'sell', item.id));
+    fragment.appendChild(createItemCard(item, actions));
+  });
+
+  els.bagList.replaceChildren(fragment);
+}
+
+function renderOptions() {
+  if (!els.optionDungeonText) return;
+  els.optionDungeonText.textContent = currentDungeon().name;
+  els.optionStageText.textContent = `${currentStage()}階`;
+  els.optionBattleText.textContent = state.autoBattle ? '戦闘中' : '停止中';
+  els.optionGoldText.textContent = `${state.gold}G`;
+}
+
+function createItemCard(item, actions) {
+  const node = els.itemCardTemplate.content.firstElementChild.cloneNode(true);
+  node.querySelector('.item-name').textContent = bagItemName(item);
+  const equipLabel = equippedSlotOf(item.id);
+  node.querySelector('.item-meta').textContent = `${item.slot === 'weapon' ? '武器' : item.slot === 'armor' ? '防具' : '装飾品'}${equipLabel ? ' / ' + equipLabel : ''}`;
+  const rarityNode = node.querySelector('.item-rarity');
+  if (rarityNode) rarityNode.textContent = '';
+  node.querySelector('.item-stats').innerHTML = itemStatText(item);
+  const wrap = node.querySelector('.item-actions');
+  actions.forEach((button) => wrap.appendChild(button));
+  return node;
+}
+
+function actionButton(label, action, itemId) {
+  const button = document.createElement('button');
+  button.textContent = label;
+  button.dataset.action = action;
+  button.dataset.itemId = String(itemId);
+  return button;
+}
+
+function bagItemName(item) {
+  if (!item) return '';
+  const baseName = item.baseName || item.name || '';
+  const prefix = `${item.rarity} `;
+  return item.rarity && baseName.startsWith(prefix) ? baseName.slice(prefix.length) : baseName;
+}
+
+function itemStatText(item) {
+  const lines = [];
+  if (item.atk) lines.push(`攻撃 +${item.atk}`);
+  if (item.slot === 'weapon' && item.weaponType) lines.push(`武器種 ${item.weaponType}`);
+  if (item.slot === 'weapon' && item.attackInterval) lines.push(`攻撃間隔 ${item.attackInterval.toFixed(1)}秒`);
+  if (item.hp) lines.push(`HP +${item.hp}`);
+  if (item.def) lines.push(`防御 +${item.def}`);
+  if (item.str) lines.push(`ちから +${item.str}`);
+  if (item.vit) lines.push(`たいりょく +${item.vit}`);
+  if (item.int) lines.push(`かしこさ +${item.int}`);
+  if (item.agi) lines.push(`すばやさ +${item.agi}`);
+  if (item.optionCount) lines.push(`オプション ${item.optionCount}個`);
+  lines.push(`売値 ${Math.floor(item.price * 0.5)}G`);
+  return lines.join('<br>');
+}
+
+function equippedSlotOf(itemId) {
+  const labels = [];
+  Object.entries(state.equipment).forEach(([slot, id]) => {
+    if (id === itemId) labels.push(slotLabel(slot));
+  });
+  return labels.length ? `装備中: ${labels.join(' / ')}` : '';
+}
+
+function slotLabel(slot) {
+  return slot === 'weapon' ? '武器' : slot === 'armor' ? '防具' : '装飾品';
+}
+
+function appendLogLine(container, text) {
+  if (!container) return;
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.textContent = text;
+  container.prepend(line);
+  while (container.childNodes.length > 80) container.removeChild(container.lastChild);
+}
+
+function addLog(text) {
+  if (!els.log && !els.battleLog) {
+    pendingLogs.unshift(text);
+    while (pendingLogs.length > 80) pendingLogs.pop();
+    return;
+  }
+  appendLogLine(els.log, text);
+  appendLogLine(els.battleLog, text);
+}
+
+function flushPendingLogs() {
+  if ((!els.log && !els.battleLog) || !pendingLogs.length) return;
+  const logs = [...pendingLogs].reverse();
+  pendingLogs.length = 0;
+  logs.forEach((text) => addLog(text));
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  } catch {
+    addLog('セーブに失敗しました。');
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!isValidSaveData(parsed)) return null;
+    recalcPlayer(parsed);
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function isValidSaveData(data) {
+  return !!(
+    data &&
+    typeof data === 'object' &&
+    data.player &&
+    data.player.stats &&
+    typeof data.player.level === 'number' &&
+    typeof data.player.exp === 'number' &&
+    typeof data.player.expToNext === 'number' &&
+    typeof data.player.statPoints === 'number' &&
+    Array.isArray(data.bag) &&
+    data.equipment &&
+    data.dungeonProgress &&
+    data.unlockedDungeons &&
+    data.clearedDungeons &&
+    typeof data.lastItemId === 'number' &&
+    dungeonMaster[data.currentDungeon]
+  );
+}
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}

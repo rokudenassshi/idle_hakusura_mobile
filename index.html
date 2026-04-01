@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>放置ハクスラ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <h1>放置ハクスラ</h1>
+        <p class="sub">スマホ向け・自動戦闘</p>
+      </div>
+      <div class="header-actions">
+        <div class="chip">所持金 <strong id="goldText">0</strong>G</div>
+      </div>
+    </header>
+
+    <section id="heroCard" class="hero card hidden">
+      <div class="hero-main">
+        <div>
+          <div class="label">ダンジョン</div>
+          <div class="hero-value"><span id="dungeonNameLabel">はじまりの草原</span></div>
+        </div>
+        <div>
+          <div class="label">現在の階層</div>
+          <div class="hero-value"><span id="stageLabel">1</span>階</div>
+        </div>
+      </div>
+      <div class="hero-subline">
+        推奨 <span id="dungeonLevelText">Lv 1+</span>
+      </div>
+      <div class="hero-bars battle-panel hidden">
+        <div class="battle-side player-side">
+          <div class="battle-side-head">
+            <div class="battle-side-title">あなた</div>
+            <div class="battle-side-sub">Lv <span id="playerLevelTop">1</span></div>
+          </div>
+          <div>
+            <div class="bar-label"><span>HP</span><span id="playerHpText">0 / 0</span></div>
+            <div class="bar"><div id="playerHpBar" class="fill hp"></div></div>
+          </div>
+          <div class="battle-side-stats">
+            <div><span>DPS</span><strong id="dpsText">0</strong></div>
+            <div><span>攻撃速度</span><strong id="attackSpeedTextInfo">0.00 /秒</strong></div>
+          </div>
+        </div>
+        <div class="battle-side enemy-side">
+          <div class="battle-side-head enemy-head">
+            <div class="battle-side-title" id="enemyNameText">-</div>
+            
+          </div>
+          <div>
+            <div class="bar-label"><span>敵HP</span><span id="enemyHpText">0 / 0</span></div>
+            <div class="bar"><div id="enemyHpBar" class="fill enemy"></div></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="hero-exp">
+        <div class="bar-label"><span>EXP</span><span id="expText">0 / 0</span></div>
+        <div class="bar"><div id="expBar" class="fill exp"></div></div>
+      </div>
+      <div class="hero-actions">
+        <button id="toggleBattleBtn" class="primary">戦闘開始</button>
+      </div>
+    </section>
+
+    <nav class="tabs card">
+      <button class="tab active" data-tab="dungeon">ダンジョン選択</button>
+      <button class="tab" data-tab="bag">バッグ</button>
+      <button class="tab" data-tab="status">ステータス</button>
+      <button class="tab" data-tab="options">オプション</button>
+    </nav>
+
+    <main>
+      <section class="panel active" id="tab-dungeon">
+        <div class="card">
+          <h2>ダンジョン選択</h2>
+          <div id="dungeonList" class="dungeon-list"></div>
+          <p class="hint">戦闘中はダンジョン変更できません。ダンジョンごとに敵やドロップ傾向が変わります。</p>
+        </div>
+
+
+        <div class="card">
+          <h2>ログ</h2>
+          <div id="log" class="log"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-bag">
+        <div class="card">
+          <h2>装備中</h2>
+          <div class="equip-list">
+            <div class="equip-slot"><span>武器</span><button id="equipWeaponBtn" class="equip-btn"></button></div>
+            <div class="equip-slot"><span>防具</span><button id="equipArmorBtn" class="equip-btn"></button></div>
+            <div class="equip-slot"><span>装飾品</span><button id="equipAccessoryBtn" class="equip-btn"></button></div>
+          </div>
+          <p class="hint">武器・防具・装飾品を各1つずつ装備できます。攻撃速度は武器種ごとに固定です。</p>
+        </div>
+        <div class="card">
+          <div class="section-title-row">
+            <h2>バッグ</h2>
+            <div class="points"><strong id="bagCountText">0</strong> 個</div>
+          </div>
+          <div id="bagList" class="item-list"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-status">
+        <div class="card">
+          <div class="section-title-row">
+            <h2>プレイヤーステータス</h2>
+            <div class="points">残りポイント <strong id="pointsText">0</strong></div>
+          </div>
+          <div class="info-grid">
+            <div><span>レベル</span><strong id="statusLevel">1</strong></div>
+            <div><span>最大HP</span><strong id="maxHpText">0</strong></div>
+            <div><span>防御力</span><strong id="defText">0</strong></div>
+            <div><span>物理攻撃</span><strong id="atkText">0</strong></div>
+            <div><span>かしこさ</span><strong id="intPowerText">0</strong></div>
+            <div><span>会心率</span><strong id="critText">0%</strong></div>
+            <div><span>回避率</span><strong id="evaText">0%</strong></div>
+            <div><span>現在ダンジョン</span><strong id="statusDungeonText">-</strong></div>
+          </div>
+        </div>
+        <div class="card stat-card">
+          <div id="statList"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="tab-options">
+        <div class="card">
+          <h2>オプション</h2>
+          <div class="option-list">
+            <button id="saveBtn" class="primary wide-btn">セーブ</button>
+            <button id="resetBtn" class="danger wide-btn">リセット</button>
+          </div>
+          <div class="info-grid compact option-info">
+            <div><span>現在のダンジョン</span><strong id="optionDungeonText">-</strong></div>
+            <div><span>現在の階層</span><strong id="optionStageText">1</strong></div>
+            <div><span>自動戦闘</span><strong id="optionBattleText">停止中</strong></div>
+            <div><span>所持金</span><strong id="optionGoldText">0G</strong></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <section id="battleLogPanel" class="card battle-log-panel hidden">
+      <h2>ログ</h2>
+      <div id="battleLog" class="log"></div>
+    </section>
+  </div>
+
+  <template id="itemCardTemplate">
+    <div class="item-card">
+      <div class="item-top">
+        <div>
+          <div class="item-name"></div>
+          <div class="item-meta"></div>
+        </div>
+        <div class="item-rarity"></div>
+      </div>
+      <div class="item-stats"></div>
+      <div class="item-actions"></div>
+    </div>
+  </template>
+
+  <template id="dungeonCardTemplate">
+    <button class="dungeon-card">
+      <div class="dungeon-card-name"></div>
+    </button>
+  </template>
+
+  <script src="game.js"></script>
+</body>
+</html>
