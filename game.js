@@ -9,17 +9,17 @@ const rarityTable = [
 ];
 
 const weaponBases = [
-  { name: 'ショートソード', weaponType: '剣', minAtk: 4, maxAtk: 8, attackInterval: 1.0, stat: 'str' },
-  { name: 'バトルアクス', weaponType: '斧', minAtk: 7, maxAtk: 12, attackInterval: 2.0, stat: 'str' },
-  { name: 'ダガー', weaponType: '短剣', minAtk: 3, maxAtk: 6, attackInterval: 0.8, stat: 'agi' },
-  { name: 'ワンド', weaponType: '杖', minAtk: 3, maxAtk: 7, attackInterval: 1.2, stat: 'int' },
+  { name: 'ショートソード', weaponType: '剣', minAtk: 4, maxAtk: 8, attackInterval: 1.0 },
+  { name: 'バトルアクス', weaponType: '斧', minAtk: 7, maxAtk: 12, attackInterval: 2.0 },
+  { name: 'ダガー', weaponType: '短剣', minAtk: 3, maxAtk: 6, attackInterval: 0.8 },
+  { name: 'ワンド', weaponType: '杖', minAtk: 3, maxAtk: 7, attackInterval: 1.2 },
 ];
 
 const armorBases = [
-  { name: 'レザーアーマー', minDef: 2, maxDef: 4, hp: 14, stat: 'vit' },
-  { name: 'チェインメイル', minDef: 4, maxDef: 7, hp: 22, stat: 'str' },
-  { name: 'ミスリルアーマー', minDef: 6, maxDef: 10, hp: 30, stat: 'vit' },
-  { name: 'ローブ', minDef: 1, maxDef: 3, hp: 10, stat: 'int' },
+  { name: 'レザーアーマー', minDef: 2, maxDef: 4, hp: 14 },
+  { name: 'チェインメイル', minDef: 4, maxDef: 7, hp: 22 },
+  { name: 'ミスリルアーマー', minDef: 6, maxDef: 10, hp: 30 },
+  { name: 'ローブ', minDef: 1, maxDef: 3, hp: 10 },
 ];
 
 const accessoryBases = [
@@ -120,7 +120,6 @@ function applyRandomOptions(item, stage, optionCount) {
     item.options.push({ key: def.key, label: def.label, value });
   }
   const rarity = rarityByOptionCount(item.options.length);
-  item.rarityKey = rarity.key;
   item.rarity = rarity.label;
   item.optionCount = item.options.length;
 }
@@ -548,13 +547,11 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
     id: ++sourceState.lastItemId,
     slot: 'weapon',
     rarity: '',
-    rarityKey: 'common',
     optionCount: 0,
     options: [],
     name: base.name,
     baseName: base.name,
     atk: Math.floor(rand(base.minAtk, base.maxAtk) * scale),
-    speed: 0,
     attackInterval: base.attackInterval,
     hp: 0,
     def: 0,
@@ -563,7 +560,6 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
     int: 0,
     agi: 0,
     price: Math.floor(rand(base.minAtk, base.maxAtk) * 6 * scale),
-    itemType: base.name,
     weaponType: base.weaponType,
   };
   applyRandomOptions(item, stage, optionCount);
@@ -579,13 +575,11 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
     id: ++sourceState.lastItemId,
     slot: 'armor',
     rarity: '',
-    rarityKey: 'common',
     optionCount: 0,
     options: [],
     name: base.name,
     baseName: base.name,
     atk: 0,
-    speed: 0,
     hp: Math.floor(base.hp * scale),
     def: Math.max(1, Math.floor(rand(base.minDef, base.maxDef) * scale)),
     str: 0,
@@ -593,8 +587,6 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
     int: 0,
     agi: 0,
     price: Math.floor((base.hp + base.maxDef * 16) * scale),
-    itemType: base.name,
-    armorType: '防具',
   };
   applyRandomOptions(item, stage, optionCount);
   item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
@@ -609,13 +601,11 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
     id: ++sourceState.lastItemId,
     slot: 'accessory',
     rarity: '',
-    rarityKey: 'common',
     optionCount: 0,
     options: [],
     name: base.name,
     baseName: base.name,
     atk: 0,
-    speed: 0,
     hp: Math.floor((base.hp || 0) * scale),
     def: Math.floor((base.def || 0) * scale),
     str: Math.floor((base.str || 0) * scale),
@@ -623,7 +613,6 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
     int: Math.floor((base.int || 0) * scale),
     agi: Math.floor((base.agi || 0) * scale),
     price: Math.floor(((base.hp || 0) + (base.def || 0) * 8 + 20) * scale),
-    itemType: base.name,
   };
   applyRandomOptions(item, stage, optionCount);
   item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
