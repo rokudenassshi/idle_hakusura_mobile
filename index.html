@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
@@ -20,6 +21,7 @@
     })();
   </script>
 </head>
+
 <body>
   <div class="app">
     <header class="topbar">
@@ -54,7 +56,9 @@
           </div>
           <div>
             <div class="bar-label"><span>HP</span><span id="playerHpText">0 / 0</span></div>
-            <div class="bar"><div id="playerHpBar" class="fill hp"></div></div>
+            <div class="bar">
+              <div id="playerHpBar" class="fill hp"></div>
+            </div>
           </div>
           <div class="battle-side-stats">
             <div><span>DPS</span><strong id="dpsText">0</strong></div>
@@ -64,18 +68,22 @@
         <div class="battle-side enemy-side">
           <div class="battle-side-head enemy-head">
             <div class="battle-side-title" id="enemyNameText">-</div>
-            
+
           </div>
           <div>
             <div class="bar-label"><span>敵HP</span><span id="enemyHpText">0 / 0</span></div>
-            <div class="bar"><div id="enemyHpBar" class="fill enemy"></div></div>
+            <div class="bar">
+              <div id="enemyHpBar" class="fill enemy"></div>
+            </div>
           </div>
 
         </div>
       </div>
       <div class="hero-exp">
         <div class="bar-label"><span>EXP</span><span id="expText">0 / 0</span></div>
-        <div class="bar"><div id="expBar" class="fill exp"></div></div>
+        <div class="bar">
+          <div id="expBar" class="fill exp"></div>
+        </div>
       </div>
       <div class="hero-actions">
         <button id="toggleBattleBtn" class="primary">戦闘開始</button>
@@ -151,7 +159,8 @@
           <h2>オプション</h2>
           <div class="option-list">
             <button id="saveBtn" class="primary wide-btn">セーブ</button>
-            <button id="resetBtn" class="danger wide-btn">リセット</button>
+            <button class="status-save-button" type="button" onclick="openImportSaveDialog()">インポート</button>
+            <button class="status-save-button" type="button" onclick="exportSaveData()">エクスポート</button>
           </div>
         </div>
       </section>
@@ -185,4 +194,5 @@
     </button>
   </template>
 </body>
+
 </html>

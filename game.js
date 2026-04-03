@@ -1,41 +1,66 @@
-const SAVE_KEY = 'idle_hakusura_mobile_save_v7_option_rarity';
+const SAVE_KEY = "idle_hakusura_mobile_save_v7_option_rarity";
 
 const rarityTable = [
-  { key: 'common', label: 'コモン', optionCount: 1 },
-  { key: 'uncommon', label: 'アンコモン', optionCount: 2 },
-  { key: 'rare', label: 'レア', optionCount: 3 },
-  { key: 'epic', label: 'エピック', optionCount: 4 },
-  { key: 'legendary', label: 'レジェンダリー', optionCount: 5 },
+  { key: "common", label: "コモン", optionCount: 1 },
+  { key: "uncommon", label: "アンコモン", optionCount: 2 },
+  { key: "rare", label: "レア", optionCount: 3 },
+  { key: "epic", label: "エピック", optionCount: 4 },
+  { key: "legendary", label: "レジェンダリー", optionCount: 5 },
 ];
 
 const weaponBases = [
-  { name: 'ショートソード', weaponType: '剣', minAtk: 4, maxAtk: 8, attackInterval: 1.0 },
-  { name: 'バトルアクス', weaponType: '斧', minAtk: 7, maxAtk: 12, attackInterval: 2.0 },
-  { name: 'ダガー', weaponType: '短剣', minAtk: 3, maxAtk: 6, attackInterval: 0.8 },
-  { name: 'ワンド', weaponType: '杖', minAtk: 3, maxAtk: 7, attackInterval: 1.2 },
+  {
+    name: "ショートソード",
+    weaponType: "剣",
+    minAtk: 4,
+    maxAtk: 8,
+    attackInterval: 1.0,
+  },
+  {
+    name: "バトルアクス",
+    weaponType: "斧",
+    minAtk: 7,
+    maxAtk: 12,
+    attackInterval: 2.0,
+  },
+  {
+    name: "ダガー",
+    weaponType: "短剣",
+    minAtk: 3,
+    maxAtk: 6,
+    attackInterval: 0.8,
+  },
+  {
+    name: "ワンド",
+    weaponType: "杖",
+    minAtk: 3,
+    maxAtk: 7,
+    attackInterval: 1.2,
+  },
 ];
 
 const armorBases = [
-  { name: 'レザーアーマー', minDef: 2, maxDef: 4, hp: 14 },
-  { name: 'チェインメイル', minDef: 4, maxDef: 7, hp: 22 },
-  { name: 'ミスリルアーマー', minDef: 6, maxDef: 10, hp: 30 },
-  { name: 'ローブ', minDef: 1, maxDef: 3, hp: 10 },
+  { name: "レザーアーマー", minDef: 2, maxDef: 4, hp: 14 },
+  { name: "チェインメイル", minDef: 4, maxDef: 7, hp: 22 },
+  { name: "ミスリルアーマー", minDef: 6, maxDef: 10, hp: 30 },
+  { name: "ローブ", minDef: 1, maxDef: 3, hp: 10 },
 ];
 
 const accessoryBases = [
-  { name: '生命の指輪', hp: 22, vit: 2 },
-  { name: '俊足のお守り', agi: 4, def: 1 },
-  { name: '守護のペンダント', vit: 3, def: 1, hp: 8 },
-  { name: '戦士の紋章', str: 3, hp: 10 },
+  { name: "生命の指輪", hp: 22, vit: 2 },
+  { name: "俊足のお守り", agi: 4, def: 1 },
+  { name: "守護のペンダント", vit: 3, def: 1, hp: 8 },
+  { name: "戦士の紋章", str: 3, hp: 10 },
 ];
 
 const dungeonMaster = DUNGEON_MASTER;
 
-
-const dungeonOrder = ['meadow', 'cave'];
+const dungeonOrder = ["meadow", "cave"];
 
 function rarityByOptionCount(optionCount) {
-  return rarityTable.find((r) => r.optionCount === optionCount) || rarityTable[0];
+  return (
+    rarityTable.find((r) => r.optionCount === optionCount) || rarityTable[0]
+  );
 }
 
 function rollOptionCount() {
@@ -48,28 +73,28 @@ function rollOptionCount() {
 }
 
 function makeOptionPool(slot) {
-  if (slot === 'weapon') {
+  if (slot === "weapon") {
     return [
-      { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
-      { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
-      { key: 'atk', label: '攻撃', min: 1, max: 6, scale: 0.22 },
-      { key: 'def', label: '防御', min: 1, max: 3, scale: 0.12 },
+      { key: "str", label: "ちから", min: 1, max: 4, scale: 0.16 },
+      { key: "agi", label: "すばやさ", min: 1, max: 4, scale: 0.16 },
+      { key: "atk", label: "攻撃", min: 1, max: 6, scale: 0.22 },
+      { key: "def", label: "防御", min: 1, max: 3, scale: 0.12 },
     ];
   }
-  if (slot === 'armor') {
+  if (slot === "armor") {
     return [
-      { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
-      { key: 'str', label: 'ちから', min: 1, max: 3, scale: 0.12 },
-      { key: 'hp', label: 'HP', min: 6, max: 18, scale: 0.3 },
-      { key: 'def', label: '防御', min: 1, max: 5, scale: 0.2 },
+      { key: "vit", label: "たいりょく", min: 1, max: 4, scale: 0.16 },
+      { key: "str", label: "ちから", min: 1, max: 3, scale: 0.12 },
+      { key: "hp", label: "HP", min: 6, max: 18, scale: 0.3 },
+      { key: "def", label: "防御", min: 1, max: 5, scale: 0.2 },
     ];
   }
   return [
-    { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
-    { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
-    { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
-    { key: 'hp', label: 'HP', min: 5, max: 16, scale: 0.26 },
-    { key: 'def', label: '防御', min: 1, max: 4, scale: 0.16 },
+    { key: "str", label: "ちから", min: 1, max: 4, scale: 0.16 },
+    { key: "vit", label: "たいりょく", min: 1, max: 4, scale: 0.16 },
+    { key: "agi", label: "すばやさ", min: 1, max: 4, scale: 0.16 },
+    { key: "hp", label: "HP", min: 5, max: 16, scale: 0.26 },
+    { key: "def", label: "防御", min: 1, max: 4, scale: 0.16 },
   ];
 }
 
@@ -92,10 +117,9 @@ function applyRandomOptions(item, stage, optionCount) {
   item.optionCount = item.options.length;
 }
 
-
 function nextDungeonKey(key) {
   const index = dungeonOrder.indexOf(key);
-  return index >= 0 ? dungeonOrder[index + 1] ?? null : null;
+  return index >= 0 ? (dungeonOrder[index + 1] ?? null) : null;
 }
 
 let state = loadGame() ?? createInitialState();
@@ -105,13 +129,25 @@ let playerAttackCooldown = 0;
 let enemyAttackCooldown = 0;
 let battleTimer = null;
 const pendingLogs = [];
-let currentTab = 'dungeon';
-const dirty = { battle: true, dungeon: true, bag: true, equipment: true, status: true, options: true, visibility: true };
-function markDirty(...keys) { keys.forEach((key) => { if (key in dirty) dirty[key] = true; }); }
+let currentTab = "dungeon";
+const dirty = {
+  battle: true,
+  dungeon: true,
+  bag: true,
+  equipment: true,
+  status: true,
+  options: true,
+  visibility: true,
+};
+function markDirty(...keys) {
+  keys.forEach((key) => {
+    if (key in dirty) dirty[key] = true;
+  });
+}
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   els = mapElements();
-  currentTab = document.querySelector('.tab.active')?.dataset.tab || 'dungeon';
+  currentTab = document.querySelector(".tab.active")?.dataset.tab || "dungeon";
   bindEvents();
   flushPendingLogs();
   ensureEnemy(true);
@@ -125,7 +161,7 @@ function createInitialState() {
     autoBattle: false,
     gold: 0,
     kills: 0,
-    currentDungeon: 'meadow',
+    currentDungeon: "meadow",
     unlockedDungeons: { meadow: true, cave: false },
     clearedDungeons: { meadow: false, cave: false },
     dungeonProgress: { meadow: 1, cave: 1 },
@@ -168,7 +204,9 @@ function currentStage(sourceState = state) {
 
 function setCurrentStage(value, sourceState = state) {
   const dungeon = currentDungeon(sourceState);
-  const cappedStage = dungeon.finalStage ? Math.min(Math.floor(value), dungeon.finalStage) : Math.floor(value);
+  const cappedStage = dungeon.finalStage
+    ? Math.min(Math.floor(value), dungeon.finalStage)
+    : Math.floor(value);
   sourceState.dungeonProgress[dungeon.key] = Math.max(1, cappedStage);
 }
 
@@ -185,92 +223,92 @@ function grantStarterItems(s) {
 function mapElements() {
   const byId = (id) => document.getElementById(id);
   return {
-    heroCard: byId('heroCard'),
-    dungeonNameLabel: byId('dungeonNameLabel'),
-    dungeonLevelText: byId('dungeonLevelText'),
-    dungeonList: byId('dungeonList'),
-    stageLabel: byId('stageLabel'),
-    playerHpText: byId('playerHpText'),
-    playerHpBar: byId('playerHpBar'),
-    enemyHpText: byId('enemyHpText'),
-    enemyHpBar: byId('enemyHpBar'),
-    expText: byId('expText'),
-    expBar: byId('expBar'),
-    toggleBattleBtn: byId('toggleBattleBtn'),
-    levelText: byId('levelText'),
-    playerLevelTop: byId('playerLevelTop'),
-    goldText: byId('goldText'),
-    dpsText: byId('dpsText'),
-    attackSpeedText: byId('attackSpeedText'),
-    dpsTextInfo: byId('dpsTextInfo'),
-    attackSpeedTextInfo: byId('attackSpeedTextInfo'),
-    enemyNameText: byId('enemyNameText'),
-    enemyRankText: byId('enemyRankText'),
-    enemyAtkText: byId('enemyAtkText'),
-    enemyRewardText: byId('enemyRewardText'),
-    enemyNameTextInfo: byId('enemyNameTextInfo'),
-    enemyAttackSpeedTextInfo: byId('enemyAttackSpeedTextInfo'),
-    enemyRankTextInfo: byId('enemyRankTextInfo'),
-    enemyAtkTextInfo: byId('enemyAtkTextInfo'),
-    enemyRewardTextInfo: byId('enemyRewardTextInfo'),
-    log: byId('log'),
-    battleLog: byId('battleLog'),
-    battleLogPanel: byId('battleLogPanel'),
-    statusLevel: byId('statusLevel'),
-    killCountText: byId('killCountText'),
-    maxHpText: byId('maxHpText'),
-    defText: byId('defText'),
-    atkText: byId('atkText'),
-    critText: byId('critText'),
-    evaText: byId('evaText'),
-    critDamageText: byId('critDamageText'),
-    attackSpeedTotalText: byId('attackSpeedTotalText'),
-    lifeStealText: byId('lifeStealText'),
-    pointsText: byId('pointsText'),
-    statList: byId('statList'),
-    equipWeaponBtn: byId('equipWeaponBtn'),
-    equipArmorBtn: byId('equipArmorBtn'),
-    equipAccessoryBtn: byId('equipAccessoryBtn'),
-    bagList: byId('bagList'),
-    bagCountText: byId('bagCountText'),
-    saveBtn: byId('saveBtn'),
-    resetBtn: byId('resetBtn'),
-    itemCardTemplate: byId('itemCardTemplate'),
-    dungeonCardTemplate: byId('dungeonCardTemplate'),
+    heroCard: byId("heroCard"),
+    dungeonNameLabel: byId("dungeonNameLabel"),
+    dungeonLevelText: byId("dungeonLevelText"),
+    dungeonList: byId("dungeonList"),
+    stageLabel: byId("stageLabel"),
+    playerHpText: byId("playerHpText"),
+    playerHpBar: byId("playerHpBar"),
+    enemyHpText: byId("enemyHpText"),
+    enemyHpBar: byId("enemyHpBar"),
+    expText: byId("expText"),
+    expBar: byId("expBar"),
+    toggleBattleBtn: byId("toggleBattleBtn"),
+    levelText: byId("levelText"),
+    playerLevelTop: byId("playerLevelTop"),
+    goldText: byId("goldText"),
+    dpsText: byId("dpsText"),
+    attackSpeedText: byId("attackSpeedText"),
+    dpsTextInfo: byId("dpsTextInfo"),
+    attackSpeedTextInfo: byId("attackSpeedTextInfo"),
+    enemyNameText: byId("enemyNameText"),
+    enemyRankText: byId("enemyRankText"),
+    enemyAtkText: byId("enemyAtkText"),
+    enemyRewardText: byId("enemyRewardText"),
+    enemyNameTextInfo: byId("enemyNameTextInfo"),
+    enemyAttackSpeedTextInfo: byId("enemyAttackSpeedTextInfo"),
+    enemyRankTextInfo: byId("enemyRankTextInfo"),
+    enemyAtkTextInfo: byId("enemyAtkTextInfo"),
+    enemyRewardTextInfo: byId("enemyRewardTextInfo"),
+    log: byId("log"),
+    battleLog: byId("battleLog"),
+    battleLogPanel: byId("battleLogPanel"),
+    statusLevel: byId("statusLevel"),
+    killCountText: byId("killCountText"),
+    maxHpText: byId("maxHpText"),
+    defText: byId("defText"),
+    atkText: byId("atkText"),
+    critText: byId("critText"),
+    evaText: byId("evaText"),
+    critDamageText: byId("critDamageText"),
+    attackSpeedTotalText: byId("attackSpeedTotalText"),
+    lifeStealText: byId("lifeStealText"),
+    pointsText: byId("pointsText"),
+    statList: byId("statList"),
+    equipWeaponBtn: byId("equipWeaponBtn"),
+    equipArmorBtn: byId("equipArmorBtn"),
+    equipAccessoryBtn: byId("equipAccessoryBtn"),
+    bagList: byId("bagList"),
+    bagCountText: byId("bagCountText"),
+    saveBtn: byId("saveBtn"),
+    resetBtn: byId("resetBtn"),
+    itemCardTemplate: byId("itemCardTemplate"),
+    dungeonCardTemplate: byId("dungeonCardTemplate"),
   };
 }
 
 function bindEvents() {
-  document.querySelectorAll('.tab').forEach((btn) => {
-    btn.addEventListener('click', () => {
+  document.querySelectorAll(".tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
       currentTab = btn.dataset.tab;
       activateTab(currentTab);
-      markDirty('visibility', currentTab, 'equipment');
+      markDirty("visibility", currentTab, "equipment");
       renderAll();
     });
   });
 
-  els.bagList?.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-action]');
+  els.bagList?.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
     if (!button) return;
     const itemId = Number(button.dataset.itemId);
     const action = button.dataset.action;
     if (!itemId || !action) return;
 
-    if (action === 'equip-weapon') equipItem(itemId, 'weapon');
-    else if (action === 'equip-armor') equipItem(itemId, 'armor');
-    else if (action === 'equip-accessory') equipItem(itemId, 'accessory');
-    else if (action === 'sell') sellItem(itemId);
+    if (action === "equip-weapon") equipItem(itemId, "weapon");
+    else if (action === "equip-armor") equipItem(itemId, "armor");
+    else if (action === "equip-accessory") equipItem(itemId, "accessory");
+    else if (action === "sell") sellItem(itemId);
   });
 
-  els.toggleBattleBtn?.addEventListener('click', toggleBattle);
-  els.saveBtn?.addEventListener('click', () => {
+  els.toggleBattleBtn?.addEventListener("click", toggleBattle);
+  els.saveBtn?.addEventListener("click", () => {
     saveGame();
-    addLog('セーブしました。');
+    addLog("セーブしました。");
   });
 
-  els.resetBtn?.addEventListener('click', () => {
-    if (!confirm('セーブデータを削除して最初から始めますか？')) return;
+  els.resetBtn?.addEventListener("click", () => {
+    if (!confirm("セーブデータを削除して最初から始めますか？")) return;
     localStorage.removeItem(SAVE_KEY);
     location.reload();
   });
@@ -302,7 +340,7 @@ function tick(delta) {
 
   ensureEnemy();
   if (!state.enemy) {
-    markDirty('battle');
+    markDirty("battle");
     renderBattleSummary();
     dirty.battle = false;
     return;
@@ -334,7 +372,7 @@ function tick(delta) {
     const raw = rand(state.enemy.atkMin, state.enemy.atkMax);
     const evaded = Math.random() < pStats.evasion;
     if (evaded) {
-      addLog('敵の攻撃を回避した。');
+      addLog("敵の攻撃を回避した。");
     } else {
       const damage = Math.max(1, Math.floor(raw - pStats.def));
       state.player.hp = Math.max(0, state.player.hp - damage);
@@ -358,11 +396,11 @@ function toggleBattle() {
   state.autoBattle = !state.autoBattle;
   playerAttackCooldown = 0;
   enemyAttackCooldown = 0;
-  addLog(state.autoBattle ? '自動戦闘を開始。' : '自動戦闘を停止。');
+  addLog(state.autoBattle ? "自動戦闘を開始。" : "自動戦闘を停止。");
   if (state.autoBattle) {
     ensureEnemy();
   }
-  markDirty('battle', 'visibility', 'options');
+  markDirty("battle", "visibility", "options");
   renderAll();
 }
 
@@ -372,14 +410,34 @@ function ensureEnemy(force = false) {
 }
 
 function dungeonEnemyTable(dungeon) {
-  const fallback = [{ key: 'unknown', name: 'モンスター', hp: 40, atk: 8, attackInterval: 1.3, exp: 7, gold: 6 }];
+  const fallback = [
+    {
+      key: "unknown",
+      name: "モンスター",
+      hp: 40,
+      atk: 8,
+      attackInterval: 1.3,
+      exp: 7,
+      gold: 6,
+    },
+  ];
   if (!dungeon?.enemyKeys?.length) return fallback;
-  const enemyTable = dungeon.enemyKeys.map((enemyKey) => ENEMY_MASTER[enemyKey]).filter(Boolean);
+  const enemyTable = dungeon.enemyKeys
+    .map((enemyKey) => ENEMY_MASTER[enemyKey])
+    .filter(Boolean);
   return enemyTable.length ? enemyTable : fallback;
 }
 
 function dungeonBossDef(dungeon) {
-  const fallback = { key: 'bossUnknown', name: `${dungeon.name}の主`, hp: 260, atk: 30, attackInterval: 1.6, exp: 48, gold: 44 };
+  const fallback = {
+    key: "bossUnknown",
+    name: `${dungeon.name}の主`,
+    hp: 260,
+    atk: 30,
+    attackInterval: 1.6,
+    exp: 48,
+    gold: 44,
+  };
   if (!dungeon?.bossKey) return fallback;
   return BOSS_MASTER[dungeon.bossKey] || fallback;
 }
@@ -392,10 +450,11 @@ function createEnemy(stage, dungeon) {
   const enemyDef = isBossFloor
     ? dungeonBossDef(dungeon)
     : enemyTable[(stage + tier) % enemyTable.length];
-  const rank = isBossFloor ? 'BOSS' : '';
+  const rank = isBossFloor ? "BOSS" : "";
   const rankMul = isBossFloor ? 2.7 : 1;
   const hpBase = enemyDef.hp + stage * 18 + tier * 10;
-  const atkBase = (enemyDef.atk + stage * 2.4 + tier * 1.8) * (isBossFloor ? 1.85 : 1);
+  const atkBase =
+    (enemyDef.atk + stage * 2.4 + tier * 1.8) * (isBossFloor ? 1.85 : 1);
   const baseHp = Math.floor(hpBase * rankMul * dungeon.hpScale);
   const baseExp = enemyDef.exp + stage * 2.6 + tier * 1.4;
   const baseGold = enemyDef.gold + stage * 2.9 + tier * 1.1;
@@ -406,7 +465,10 @@ function createEnemy(stage, dungeon) {
     hp: baseHp,
     atkMin: Math.max(1, Math.floor(atkBase * dungeon.atkScale * 0.75)),
     atkMax: Math.max(2, Math.floor(atkBase * dungeon.atkScale * 1.2)),
-    attackInterval: Math.max(0.55, enemyDef.attackInterval / dungeon.speedScale),
+    attackInterval: Math.max(
+      0.55,
+      enemyDef.attackInterval / dungeon.speedScale,
+    ),
     exp: Math.floor(baseExp * rankMul * dungeon.expScale),
     gold: Math.floor(baseGold * rankMul * dungeon.goldScale),
     isBoss: isBossFloor,
@@ -414,7 +476,7 @@ function createEnemy(stage, dungeon) {
 }
 
 function getEquippedItems(sourceState = state) {
-  return ['weapon', 'armor', 'accessory']
+  return ["weapon", "armor", "accessory"]
     .map((slot) => getItemById(sourceState.equipment[slot], sourceState))
     .filter(Boolean);
 }
@@ -427,14 +489,23 @@ function getDerivedStats(sourceState = state) {
   const equipDef = equipItems.reduce((sum, item) => sum + item.def, 0);
   const bonusAtk = equipItems.reduce((sum, item) => sum + item.str, 0);
   const bonusHp = equipItems.reduce((sum, item) => sum + item.vit * 8, 0);
-  const bonusEvasion = equipItems.reduce((sum, item) => sum + item.agi * 0.004, 0);
+  const bonusEvasion = equipItems.reduce(
+    (sum, item) => sum + item.agi * 0.004,
+    0,
+  );
   const bonusCrit = equipItems.reduce((sum, item) => sum + item.agi * 0.004, 0);
 
-  const equippedWeapon = equipItems.find((item) => item.slot === 'weapon');
+  const equippedWeapon = equipItems.find((item) => item.slot === "weapon");
   const weaponAttackInterval = equippedWeapon?.attackInterval || 1.2;
   const attackSpeedReduction = baseStats.attackSpeed * 0.05;
-  const attackInterval = Math.max(0.2, weaponAttackInterval - attackSpeedReduction);
-  const appliedAttackSpeedReduction = Math.max(0, weaponAttackInterval - attackInterval);
+  const attackInterval = Math.max(
+    0.2,
+    weaponAttackInterval - attackSpeedReduction,
+  );
+  const appliedAttackSpeedReduction = Math.max(
+    0,
+    weaponAttackInterval - attackInterval,
+  );
   const attackSpeed = 1 / Math.max(0.2, attackInterval);
   const critDamageMultiplier = 1.5 + baseStats.critDamage * 0.03;
   const crit = Math.min(0.8, 0.05 + baseStats.crit * 0.005 + bonusCrit);
@@ -458,14 +529,20 @@ function getDerivedStats(sourceState = state) {
 function recalcPlayer(sourceState = state) {
   const derived = getDerivedStats(sourceState);
   sourceState.player.maxHp = derived.maxHp;
-  sourceState.player.hp = Math.max(1, Math.min(sourceState.player.hp || derived.maxHp, derived.maxHp));
+  sourceState.player.hp = Math.max(
+    1,
+    Math.min(sourceState.player.hp || derived.maxHp, derived.maxHp),
+  );
 }
 
 function computePlayerDamage(pStats) {
-  let damage = rand(Math.floor(pStats.attackPower * 0.75), Math.floor(pStats.attackPower * 1.15));
+  let damage = rand(
+    Math.floor(pStats.attackPower * 0.75),
+    Math.floor(pStats.attackPower * 1.15),
+  );
   if (Math.random() < pStats.crit) {
     damage = Math.floor(damage * pStats.critDamageMultiplier);
-    addLog('会心の一撃！');
+    addLog("会心の一撃！");
   }
   return Math.max(1, damage);
 }
@@ -507,14 +584,14 @@ function onEnemyDefeated() {
   if (state.autoBattle) {
     ensureEnemy(true);
   }
-  markDirty('battle', 'bag', 'equipment', 'status', 'options', 'dungeon');
+  markDirty("battle", "bag", "equipment", "status", "options", "dungeon");
 }
 
 function onPlayerDefeated() {
   state.autoBattle = false;
   state.player.hp = Math.max(1, Math.floor(state.player.maxHp * 0.5));
-  addLog('力尽きた……。HPを半分回復して戦闘停止。');
-  markDirty('battle', 'visibility', 'options');
+  addLog("力尽きた……。HPを半分回復して戦闘停止。");
+  markDirty("battle", "visibility", "options");
   renderAll();
 }
 
@@ -527,7 +604,9 @@ function gainExp(amount) {
     state.player.expToNext = Math.floor(state.player.expToNext * 1.25 + 8);
     recalcPlayer(state);
     state.player.hp = state.player.maxHp;
-    addLog(`レベルアップ！ Lv${state.player.level} になり、ステータスポイントを4獲得。`);
+    addLog(
+      `レベルアップ！ Lv${state.player.level} になり、ステータスポイントを4獲得。`,
+    );
   }
 }
 
@@ -542,16 +621,17 @@ function rollDrop() {
 }
 
 function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const basePool = currentDungeon(sourceState).key === 'cave'
-    ? [weaponBases[1], weaponBases[0], weaponBases[3], weaponBases[2]]
-    : weaponBases;
+  const basePool =
+    currentDungeon(sourceState).key === "cave"
+      ? [weaponBases[1], weaponBases[0], weaponBases[3], weaponBases[2]]
+      : weaponBases;
   const base = forcedBase || basePool[rand(0, basePool.length - 1)];
   const scale = 1 + stage * 0.11;
 
   const item = {
     id: ++sourceState.lastItemId,
-    slot: 'weapon',
-    rarity: '',
+    slot: "weapon",
+    rarity: "",
     optionCount: 0,
     options: [],
     name: base.name,
@@ -577,8 +657,8 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
 
   const item = {
     id: ++sourceState.lastItemId,
-    slot: 'armor',
-    rarity: '',
+    slot: "armor",
+    rarity: "",
     optionCount: 0,
     options: [],
     name: base.name,
@@ -602,8 +682,8 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
 
   const item = {
     id: ++sourceState.lastItemId,
-    slot: 'accessory',
-    rarity: '',
+    slot: "accessory",
+    rarity: "",
     optionCount: 0,
     options: [],
     name: base.name,
@@ -628,9 +708,9 @@ function getItemById(id, sourceState = state) {
 
 function canEquip(item, slot) {
   if (!item) return false;
-  if (slot === 'weapon') return item.slot === 'weapon';
-  if (slot === 'armor') return item.slot === 'armor';
-  if (slot === 'accessory') return item.slot === 'accessory';
+  if (slot === "weapon") return item.slot === "weapon";
+  if (slot === "armor") return item.slot === "armor";
+  if (slot === "accessory") return item.slot === "accessory";
   return false;
 }
 
@@ -640,13 +720,13 @@ function equipItem(itemId, slot) {
   state.equipment[slot] = itemId;
   recalcPlayer(state);
   addLog(`${slotLabel(slot)} に ${bagItemName(item)} を装備。`);
-  markDirty('bag', 'equipment', 'status', 'battle', 'options');
+  markDirty("bag", "equipment", "status", "battle", "options");
   renderAll();
 }
 
 function sellItem(itemId) {
   if (Object.values(state.equipment).includes(itemId)) {
-    addLog('装備中のアイテムは売却できません。');
+    addLog("装備中のアイテムは売却できません。");
     return;
   }
   const index = state.bag.findIndex((item) => item.id === itemId);
@@ -654,7 +734,7 @@ function sellItem(itemId) {
   const [item] = state.bag.splice(index, 1);
   state.gold += Math.max(1, Math.floor(item.price * 0.5));
   addLog(`${bagItemName(item)} を売却した。`);
-  markDirty('bag', 'equipment', 'options');
+  markDirty("bag", "equipment", "options");
   renderAll();
 }
 
@@ -670,7 +750,7 @@ function addStat(statKey, delta = 1) {
     state.player.statPoints += 1;
   }
   recalcPlayer(state);
-  markDirty('status', 'battle', 'options');
+  markDirty("status", "battle", "options");
   renderAll();
 }
 
@@ -682,7 +762,7 @@ function selectDungeon(key) {
     return;
   }
   if (state.autoBattle) {
-    addLog('戦闘中はダンジョンを変更できません。');
+    addLog("戦闘中はダンジョンを変更できません。");
     return;
   }
 
@@ -698,21 +778,29 @@ function selectDungeon(key) {
   state.player.hp = state.player.maxHp;
   state.autoBattle = true;
   addLog(`ダンジョンを ${dungeon.name} に変更。`);
-  addLog('1階から探索を開始。');
-  addLog('HPが全回復した。');
-  addLog('自動戦闘を開始。');
+  addLog("1階から探索を開始。");
+  addLog("HPが全回復した。");
+  addLog("自動戦闘を開始。");
   ensureEnemy(true);
-  markDirty('battle', 'dungeon', 'status', 'equipment', 'bag', 'options', 'visibility');
+  markDirty(
+    "battle",
+    "dungeon",
+    "status",
+    "equipment",
+    "bag",
+    "options",
+    "visibility",
+  );
   renderAll();
 }
 
 function clearLogs() {
   pendingLogs.length = 0;
   if (els.log) {
-    els.log.innerHTML = '';
+    els.log.innerHTML = "";
   }
   if (els.battleLog) {
-    els.battleLog.innerHTML = '';
+    els.battleLog.innerHTML = "";
   }
 }
 
@@ -733,17 +821,20 @@ function renderAll() {
     dirty.battle = false;
   }
 
-  if ((currentTab === 'dungeon' && dirty.dungeon) || dirty.visibility) {
+  if ((currentTab === "dungeon" && dirty.dungeon) || dirty.visibility) {
     renderDungeons();
     dirty.dungeon = false;
   }
 
-  if ((currentTab === 'status' && dirty.status) || dirty.visibility) {
+  if ((currentTab === "status" && dirty.status) || dirty.visibility) {
     renderStatus();
     dirty.status = false;
   }
 
-  if ((currentTab === 'bag' && (dirty.bag || dirty.equipment)) || dirty.visibility) {
+  if (
+    (currentTab === "bag" && (dirty.bag || dirty.equipment)) ||
+    dirty.visibility
+  ) {
     renderEquipment();
     renderBag();
     dirty.equipment = false;
@@ -755,19 +846,19 @@ function renderAll() {
 
 function updateTabVisibility() {
   const inBattle = state.autoBattle;
-  const tabsRoot = document.querySelector('.tabs');
-  tabsRoot?.classList.toggle('hidden', inBattle);
-  els.heroCard?.classList.toggle('hidden', !inBattle);
+  const tabsRoot = document.querySelector(".tabs");
+  tabsRoot?.classList.toggle("hidden", inBattle);
+  els.heroCard?.classList.toggle("hidden", !inBattle);
 
-  document.querySelectorAll('.tab').forEach((tab) => {
-    tab.classList.toggle('hidden', inBattle);
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.classList.toggle("hidden", inBattle);
   });
 
-  document.querySelectorAll('.panel').forEach((panel) => {
-    panel.classList.toggle('hidden', inBattle);
+  document.querySelectorAll(".panel").forEach((panel) => {
+    panel.classList.toggle("hidden", inBattle);
   });
 
-  els.battleLogPanel?.classList.toggle('hidden', !inBattle);
+  els.battleLogPanel?.classList.toggle("hidden", !inBattle);
 
   if (!inBattle) {
     activateTab(currentTab);
@@ -776,12 +867,16 @@ function updateTabVisibility() {
 
 function activateTab(tabName) {
   currentTab = tabName;
-  document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach((p) => p.classList.remove('active'));
+  document
+    .querySelectorAll(".tab")
+    .forEach((b) => b.classList.remove("active"));
+  document
+    .querySelectorAll(".panel")
+    .forEach((p) => p.classList.remove("active"));
   const tabButton = document.querySelector(`.tab[data-tab="${tabName}"]`);
   const targetPanel = document.getElementById(`tab-${tabName}`);
-  tabButton?.classList.add('active');
-  targetPanel?.classList.add('active');
+  tabButton?.classList.add("active");
+  targetPanel?.classList.add("active");
 }
 
 function renderBattleSummary() {
@@ -789,18 +884,27 @@ function renderBattleSummary() {
   const stats = getDerivedStats(state);
   const inBattle = state.autoBattle;
   const attackSpeedLabel = `${stats.attackInterval.toFixed(2)}秒/回`;
-  const dpsValue = Math.floor(stats.attackPower / Math.max(0.2, stats.attackInterval));
-  const playerHpRate = state.player.maxHp > 0 ? (state.player.hp / state.player.maxHp) * 100 : 0;
-  const expRate = state.player.expToNext > 0 ? (state.player.exp / state.player.expToNext) * 100 : 0;
+  const dpsValue = Math.floor(
+    stats.attackPower / Math.max(0.2, stats.attackInterval),
+  );
+  const playerHpRate =
+    state.player.maxHp > 0 ? (state.player.hp / state.player.maxHp) * 100 : 0;
+  const expRate =
+    state.player.expToNext > 0
+      ? (state.player.exp / state.player.expToNext) * 100
+      : 0;
 
   setText(els.dungeonNameLabel, currentDungeon().name);
   setText(els.dungeonLevelText, currentDungeon().rec);
   setText(els.stageLabel, currentStage());
-  setText(els.playerHpText, `${Math.floor(state.player.hp)} / ${state.player.maxHp}`);
+  setText(
+    els.playerHpText,
+    `${Math.floor(state.player.hp)} / ${state.player.maxHp}`,
+  );
   setWidth(els.playerHpBar, `${playerHpRate}%`);
   setText(els.expText, `${state.player.exp} / ${state.player.expToNext}`);
   setWidth(els.expBar, `${expRate}%`);
-  setText(els.toggleBattleBtn, state.autoBattle ? '戦闘停止' : '戦闘開始');
+  setText(els.toggleBattleBtn, state.autoBattle ? "戦闘停止" : "戦闘開始");
   setText(els.levelText, state.player.level);
   setText(els.playerLevelTop, state.player.level);
   setText(els.goldText, state.gold);
@@ -810,16 +914,22 @@ function renderBattleSummary() {
   setText(els.dpsTextInfo, dpsValue);
   setText(els.killCountText, state.kills);
 
-  document.querySelector('.battle-panel')?.classList.toggle('hidden', !inBattle);
+  document
+    .querySelector(".battle-panel")
+    ?.classList.toggle("hidden", !inBattle);
 
   if (inBattle) {
     ensureEnemy();
   }
 
   if (state.enemy && inBattle) {
-    const enemyHpRate = state.enemy.maxHp > 0 ? (state.enemy.hp / state.enemy.maxHp) * 100 : 0;
+    const enemyHpRate =
+      state.enemy.maxHp > 0 ? (state.enemy.hp / state.enemy.maxHp) * 100 : 0;
     const enemyAttackSpeedLabel = `${state.enemy.attackInterval.toFixed(2)}秒/回`;
-    setText(els.enemyHpText, `${Math.floor(state.enemy.hp)} / ${state.enemy.maxHp}`);
+    setText(
+      els.enemyHpText,
+      `${Math.floor(state.enemy.hp)} / ${state.enemy.maxHp}`,
+    );
     setWidth(els.enemyHpBar, `${enemyHpRate}%`);
     setText(els.enemyNameText, state.enemy.name);
     setText(els.enemyNameTextInfo, state.enemy.name);
@@ -827,13 +937,13 @@ function renderBattleSummary() {
     setText(els.enemyRankText, state.enemy.rank);
     setText(els.enemyRankTextInfo, state.enemy.rank);
   } else {
-    setText(els.enemyHpText, '-');
-    setWidth(els.enemyHpBar, '0%');
-    setText(els.enemyNameText, '-');
-    setText(els.enemyNameTextInfo, '-');
-    setText(els.enemyAttackSpeedTextInfo, '-');
-    setText(els.enemyRankText, '-');
-    setText(els.enemyRankTextInfo, '-');
+    setText(els.enemyHpText, "-");
+    setWidth(els.enemyHpBar, "0%");
+    setText(els.enemyNameText, "-");
+    setText(els.enemyNameTextInfo, "-");
+    setText(els.enemyAttackSpeedTextInfo, "-");
+    setText(els.enemyRankText, "-");
+    setText(els.enemyRankTextInfo, "-");
   }
 }
 
@@ -842,13 +952,14 @@ function renderDungeons() {
   const fragment = document.createDocumentFragment();
 
   Object.values(dungeonMaster).forEach((dungeon) => {
-    const node = els.dungeonCardTemplate.content.firstElementChild.cloneNode(true);
+    const node =
+      els.dungeonCardTemplate.content.firstElementChild.cloneNode(true);
     const unlocked = !!state.unlockedDungeons[dungeon.key];
 
-    node.classList.toggle('active', dungeon.key === state.currentDungeon);
-    node.classList.toggle('locked', !unlocked);
-    node.querySelector('.dungeon-card-name').textContent = dungeon.name;
-    node.addEventListener('click', () => selectDungeon(dungeon.key));
+    node.classList.toggle("active", dungeon.key === state.currentDungeon);
+    node.classList.toggle("locked", !unlocked);
+    node.querySelector(".dungeon-card-name").textContent = dungeon.name;
+    node.addEventListener("click", () => selectDungeon(dungeon.key));
     fragment.appendChild(node);
   });
 
@@ -859,14 +970,14 @@ function renderStatus() {
   if (!els.statusLevel || !els.statList) return;
   const stats = getDerivedStats(state);
   const statDefs = [
-    ['atk', '攻撃力', '1ポイントごとに攻撃力+2'],
-    ['maxHp', '最大HP', '1ポイントごとに最大HP+8'],
-    ['def', '防御力', '1ポイントごとに防御計算値+1.5（表示は切り捨て）'],
-    ['evasion', '回避率', '1ポイントごとに回避率+0.4%'],
-    ['crit', '会心率', '1ポイントごとに会心率+0.5%'],
-    ['critDamage', '会心ダメージ', '1ポイントごとに会心倍率+3%'],
-    ['attackSpeed', '攻撃速度', '1ポイントごとに攻撃間隔-0.05秒'],
-    ['lifeSteal', 'HP吸収', '1ポイントごとにHP吸収+1%'],
+    ["atk", "攻撃力", "1ポイントごとに攻撃力+2"],
+    ["maxHp", "最大HP", "1ポイントごとに最大HP+8"],
+    ["def", "防御力", "1ポイントごとに防御計算値+1.5（表示は切り捨て）"],
+    ["evasion", "回避率", "1ポイントごとに回避率+0.4%"],
+    ["crit", "会心率", "1ポイントごとに会心率+0.5%"],
+    ["critDamage", "会心ダメージ", "1ポイントごとに会心倍率+3%"],
+    ["attackSpeed", "攻撃速度", "1ポイントごとに攻撃間隔-0.05秒"],
+    ["lifeSteal", "HP吸収", "1ポイントごとにHP吸収+1%"],
   ];
 
   els.statusLevel.textContent = state.player.level;
@@ -879,11 +990,11 @@ function renderStatus() {
   els.attackSpeedTotalText.textContent = `-${stats.attackSpeedReduction.toFixed(2)}秒`;
   els.lifeStealText.textContent = `${Math.floor(stats.lifeSteal * 100)}%`;
   els.pointsText.textContent = state.player.statPoints;
-  els.statList.innerHTML = '';
+  els.statList.innerHTML = "";
 
   statDefs.forEach(([key, label, desc]) => {
-    const row = document.createElement('div');
-    row.className = 'stat-row';
+    const row = document.createElement("div");
+    row.className = "stat-row";
     row.innerHTML = `
       <div>
         <div class="stat-name">${label}</div>
@@ -895,20 +1006,19 @@ function renderStatus() {
         <button class="plus-btn">+1</button>
       </div>
     `;
-    const plusButton = row.querySelector('.plus-btn');
-    const minusButton = row.querySelector('.minus-btn');
+    const plusButton = row.querySelector(".plus-btn");
+    const minusButton = row.querySelector(".minus-btn");
     plusButton.disabled = state.player.statPoints <= 0;
     minusButton.disabled = state.player.stats[key] <= 0;
-    plusButton.addEventListener('click', () => addStat(key, 1));
-    minusButton.addEventListener('click', () => addStat(key, -1));
+    plusButton.addEventListener("click", () => addStat(key, 1));
+    minusButton.addEventListener("click", () => addStat(key, -1));
     els.statList.appendChild(row);
   });
 }
 
-
 function normalizePlayerStats(sourceState = state) {
   const current = sourceState?.player?.stats || {};
-  if ('atk' in current) {
+  if ("atk" in current) {
     sourceState.player.stats = {
       atk: Math.max(0, current.atk || 0),
       maxHp: Math.max(0, current.maxHp || 0),
@@ -943,9 +1053,11 @@ function renderEquipment() {
   const weapon = getItemById(state.equipment.weapon);
   const armor = getItemById(state.equipment.armor);
   const accessory = getItemById(state.equipment.accessory);
-  els.equipWeaponBtn.textContent = weapon ? bagItemName(weapon) : '未装備';
-  els.equipArmorBtn.textContent = armor ? bagItemName(armor) : '未装備';
-  els.equipAccessoryBtn.textContent = accessory ? bagItemName(accessory) : '未装備';
+  els.equipWeaponBtn.textContent = weapon ? bagItemName(weapon) : "未装備";
+  els.equipArmorBtn.textContent = armor ? bagItemName(armor) : "未装備";
+  els.equipAccessoryBtn.textContent = accessory
+    ? bagItemName(accessory)
+    : "未装備";
 }
 
 function renderBag() {
@@ -959,22 +1071,24 @@ function renderBag() {
 
   const fragment = document.createDocumentFragment();
 
-  const sortedBag = [...state.bag].sort((a, b) => Number(isEquipped(b.id)) - Number(isEquipped(a.id)));
+  const sortedBag = [...state.bag].sort(
+    (a, b) => Number(isEquipped(b.id)) - Number(isEquipped(a.id)),
+  );
 
   sortedBag.forEach((item) => {
     const actions = [];
     if (isEquipped(item.id)) {
-      actions.push(statusButton('装備中'));
+      actions.push(statusButton("装備中"));
     } else {
-      if (item.slot === 'weapon') {
-        actions.push(actionButton('武器装備', 'equip-weapon', item.id));
-      } else if (item.slot === 'armor') {
-        actions.push(actionButton('防具装備', 'equip-armor', item.id));
+      if (item.slot === "weapon") {
+        actions.push(actionButton("武器装備", "equip-weapon", item.id));
+      } else if (item.slot === "armor") {
+        actions.push(actionButton("防具装備", "equip-armor", item.id));
       } else {
-        actions.push(actionButton('装飾品装備', 'equip-accessory', item.id));
+        actions.push(actionButton("装飾品装備", "equip-accessory", item.id));
       }
     }
-    actions.push(actionButton('売却', 'sell', item.id));
+    actions.push(actionButton("売却", "sell", item.id));
     fragment.appendChild(createItemCard(item, actions));
   });
 
@@ -983,19 +1097,20 @@ function renderBag() {
 
 function createItemCard(item, actions) {
   const node = els.itemCardTemplate.content.firstElementChild.cloneNode(true);
-  node.querySelector('.item-name').textContent = bagItemName(item);
+  node.querySelector(".item-name").textContent = bagItemName(item);
   const equipLabel = equippedSlotOf(item.id);
-  node.querySelector('.item-meta').textContent = `${item.slot === 'weapon' ? '武器' : item.slot === 'armor' ? '防具' : '装飾品'}${equipLabel ? ' / ' + equipLabel : ''}`;
-  const rarityNode = node.querySelector('.item-rarity');
-  if (rarityNode) rarityNode.textContent = item.rarity || '';
-  node.querySelector('.item-stats').innerHTML = itemStatText(item);
-  const wrap = node.querySelector('.item-actions');
+  node.querySelector(".item-meta").textContent =
+    `${item.slot === "weapon" ? "武器" : item.slot === "armor" ? "防具" : "装飾品"}${equipLabel ? " / " + equipLabel : ""}`;
+  const rarityNode = node.querySelector(".item-rarity");
+  if (rarityNode) rarityNode.textContent = item.rarity || "";
+  node.querySelector(".item-stats").innerHTML = itemStatText(item);
+  const wrap = node.querySelector(".item-actions");
   actions.forEach((button) => wrap.appendChild(button));
   return node;
 }
 
 function actionButton(label, action, itemId) {
-  const button = document.createElement('button');
+  const button = document.createElement("button");
   button.textContent = label;
   button.dataset.action = action;
   button.dataset.itemId = String(itemId);
@@ -1003,25 +1118,29 @@ function actionButton(label, action, itemId) {
 }
 
 function statusButton(label) {
-  const button = document.createElement('button');
+  const button = document.createElement("button");
   button.textContent = label;
-  button.className = 'status-btn';
+  button.className = "status-btn";
   button.disabled = true;
   return button;
 }
 
 function bagItemName(item) {
-  if (!item) return '';
-  const baseName = item.baseName || item.name || '';
+  if (!item) return "";
+  const baseName = item.baseName || item.name || "";
   const prefix = `${item.rarity} `;
-  return item.rarity && baseName.startsWith(prefix) ? baseName.slice(prefix.length) : baseName;
+  return item.rarity && baseName.startsWith(prefix)
+    ? baseName.slice(prefix.length)
+    : baseName;
 }
 
 function itemStatText(item) {
   const fixed = [];
   if (item.atk) fixed.push(`攻撃 +${item.atk}`);
-  if (item.slot === 'weapon' && item.weaponType) fixed.push(`武器種 ${item.weaponType}`);
-  if (item.slot === 'weapon' && item.attackInterval) fixed.push(`攻撃間隔 ${item.attackInterval.toFixed(1)}秒`);
+  if (item.slot === "weapon" && item.weaponType)
+    fixed.push(`武器種 ${item.weaponType}`);
+  if (item.slot === "weapon" && item.attackInterval)
+    fixed.push(`攻撃間隔 ${item.attackInterval.toFixed(1)}秒`);
   if (item.hp) fixed.push(`HP +${item.hp}`);
   if (item.def) fixed.push(`防御 +${item.def}`);
   if (item.str) fixed.push(`ちから +${item.str}`);
@@ -1036,9 +1155,15 @@ function itemStatText(item) {
   }
 
   const lines = [];
-  if (fixed.length) lines.push(`<div class="stat-inline"><span class="stat-label">固有能力</span><span>${fixed.join(' / ')}</span></div>`);
-  if (options.length) lines.push(`<div class="stat-inline"><span class="stat-label">オプション</span><span>${options.join(' / ')}</span></div>`);
-  return lines.join('');
+  if (fixed.length)
+    lines.push(
+      `<div class="stat-inline"><span class="stat-label">固有能力</span><span>${fixed.join(" / ")}</span></div>`,
+    );
+  if (options.length)
+    lines.push(
+      `<div class="stat-inline"><span class="stat-label">オプション</span><span>${options.join(" / ")}</span></div>`,
+    );
+  return lines.join("");
 }
 
 function equippedSlotOf(itemId) {
@@ -1046,7 +1171,7 @@ function equippedSlotOf(itemId) {
   Object.entries(state.equipment).forEach(([slot, id]) => {
     if (id === itemId) labels.push(slotLabel(slot));
   });
-  return labels.length ? `装備中: ${labels.join(' / ')}` : '';
+  return labels.length ? `装備中: ${labels.join(" / ")}` : "";
 }
 
 function isEquipped(itemId) {
@@ -1054,16 +1179,17 @@ function isEquipped(itemId) {
 }
 
 function slotLabel(slot) {
-  return slot === 'weapon' ? '武器' : slot === 'armor' ? '防具' : '装飾品';
+  return slot === "weapon" ? "武器" : slot === "armor" ? "防具" : "装飾品";
 }
 
 function appendLogLine(container, text) {
   if (!container) return;
-  const line = document.createElement('div');
-  line.className = 'log-line';
+  const line = document.createElement("div");
+  line.className = "log-line";
   line.textContent = text;
   container.prepend(line);
-  while (container.childNodes.length > 80) container.removeChild(container.lastChild);
+  while (container.childNodes.length > 80)
+    container.removeChild(container.lastChild);
 }
 
 function addLog(text) {
@@ -1087,7 +1213,7 @@ function saveGame() {
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
   } catch {
-    addLog('セーブに失敗しました。');
+    addLog("セーブに失敗しました。");
   }
 }
 
@@ -1107,23 +1233,99 @@ function loadGame() {
 function isValidSaveData(data) {
   return !!(
     data &&
-    typeof data === 'object' &&
+    typeof data === "object" &&
     data.player &&
     data.player.stats &&
-    typeof data.player.level === 'number' &&
-    typeof data.player.exp === 'number' &&
-    typeof data.player.expToNext === 'number' &&
-    typeof data.player.statPoints === 'number' &&
+    typeof data.player.level === "number" &&
+    typeof data.player.exp === "number" &&
+    typeof data.player.expToNext === "number" &&
+    typeof data.player.statPoints === "number" &&
     Array.isArray(data.bag) &&
     data.equipment &&
     data.dungeonProgress &&
     data.unlockedDungeons &&
     data.clearedDungeons &&
-    typeof data.lastItemId === 'number' &&
+    typeof data.lastItemId === "number" &&
     dungeonMaster[data.currentDungeon]
   );
 }
 
 function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+async function exportSaveData() {
+  try {
+    const snapshot = buildSaveDataSnapshot();
+    const encrypted = await encryptSaveSnapshot(snapshot);
+    const safeVersion = snapshot.gameVersion || "unknown";
+    const dateLabel = new Date()
+      .toISOString()
+      .replace(/[:.]/g, "-")
+      .slice(0, 19);
+    const filename = `OneMoreFloorRPG_save_${safeVersion}_${dateLabel}.json`;
+    downloadTextFile(filename, JSON.stringify(encrypted));
+    if (typeof log === "function") {
+      log("🔐 セーブデータを保存しました");
+    }
+  } catch (e) {
+    if (typeof log === "function") {
+      log("⚠️ エクスポートに失敗しました");
+    }
+  }
+}
+
+function openImportSaveDialog() {
+  const input = document.getElementById("saveDataFileInput");
+  if (!input) {
+    if (typeof log === "function") log("⚠️ インポート用入力が見つかりません");
+    return;
+  }
+  // 同じファイルを連続で選ぶ場合に備えてリセット
+  input.value = "";
+  input.click();
+}
+/**
+ * localStorage からゲームのセーブデータ一式をスナップショットします。
+ * 同一ドメイン上にゲーム以外の localStorage がほぼ無い前提で、全キーを対象にします。
+ */
+function buildSaveDataSnapshot() {
+  const now = new Date();
+  const storage = {};
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      storage[k] = localStorage.getItem(k);
+    }
+  } catch (e) {
+    // 取得に失敗した場合でも、最低限メタだけ返す
+  }
+
+  return {
+    schema: SAVE_EXPORT_SCHEMA_V1,
+    gameVersion: typeof GAME_VERSION === "string" ? GAME_VERSION : null,
+    exportedAt: now.toISOString(),
+    storage,
+  };
+}
+async function encryptSaveSnapshot(snapshot) {
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await getSaveExportKey();
+  const encoded = encoder.encode(JSON.stringify(snapshot));
+  const encrypted = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    encoded,
+  );
+  return {
+    schema: SAVE_EXPORT_SCHEMA_V2,
+    gameVersion: snapshot.gameVersion || null,
+    exportedAt: snapshot.exportedAt,
+    alg: "AES-GCM",
+    kdf: "PBKDF2",
+    iv: uint8ToBase64(iv),
+    data: uint8ToBase64(new Uint8Array(encrypted)),
+  };
 }
