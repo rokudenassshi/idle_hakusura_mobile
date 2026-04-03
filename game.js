@@ -895,14 +895,20 @@ function renderBag() {
 
   const fragment = document.createDocumentFragment();
 
-  state.bag.forEach((item) => {
+  const sortedBag = [...state.bag].sort((a, b) => Number(isEquipped(b.id)) - Number(isEquipped(a.id)));
+
+  sortedBag.forEach((item) => {
     const actions = [];
-    if (item.slot === 'weapon') {
-      actions.push(actionButton('武器装備', 'equip-weapon', item.id));
-    } else if (item.slot === 'armor') {
-      actions.push(actionButton('防具装備', 'equip-armor', item.id));
+    if (isEquipped(item.id)) {
+      actions.push(statusButton('装備中'));
     } else {
-      actions.push(actionButton('装飾品装備', 'equip-accessory', item.id));
+      if (item.slot === 'weapon') {
+        actions.push(actionButton('武器装備', 'equip-weapon', item.id));
+      } else if (item.slot === 'armor') {
+        actions.push(actionButton('防具装備', 'equip-armor', item.id));
+      } else {
+        actions.push(actionButton('装飾品装備', 'equip-accessory', item.id));
+      }
     }
     actions.push(actionButton('売却', 'sell', item.id));
     fragment.appendChild(createItemCard(item, actions));
@@ -929,6 +935,14 @@ function actionButton(label, action, itemId) {
   button.textContent = label;
   button.dataset.action = action;
   button.dataset.itemId = String(itemId);
+  return button;
+}
+
+function statusButton(label) {
+  const button = document.createElement('button');
+  button.textContent = label;
+  button.className = 'status-btn';
+  button.disabled = true;
   return button;
 }
 
@@ -961,6 +975,10 @@ function equippedSlotOf(itemId) {
     if (id === itemId) labels.push(slotLabel(slot));
   });
   return labels.length ? `装備中: ${labels.join(' / ')}` : '';
+}
+
+function isEquipped(itemId) {
+  return Object.values(state.equipment).includes(itemId);
 }
 
 function slotLabel(slot) {
