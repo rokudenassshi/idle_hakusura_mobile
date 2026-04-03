@@ -1034,17 +1034,19 @@ function renderDungeons() {
   if (!els.dungeonList || !els.dungeonCardTemplate) return;
   const fragment = document.createDocumentFragment();
 
-  Object.values(dungeonMaster).forEach((dungeon) => {
-    const node =
-      els.dungeonCardTemplate.content.firstElementChild.cloneNode(true);
-    const unlocked = !!state.unlockedDungeons[dungeon.key];
+  dungeonOrder
+    .map((key) => dungeonMaster[key])
+    .filter((dungeon) => dungeon && state.unlockedDungeons[dungeon.key])
+    .reverse()
+    .forEach((dungeon) => {
+      const node =
+        els.dungeonCardTemplate.content.firstElementChild.cloneNode(true);
 
-    node.classList.toggle("active", dungeon.key === state.currentDungeon);
-    node.classList.toggle("locked", !unlocked);
-    node.querySelector(".dungeon-card-name").textContent = dungeon.name;
-    node.addEventListener("click", () => selectDungeon(dungeon.key));
-    fragment.appendChild(node);
-  });
+      node.classList.toggle("active", dungeon.key === state.currentDungeon);
+      node.querySelector(".dungeon-card-name").textContent = dungeon.name;
+      node.addEventListener("click", () => selectDungeon(dungeon.key));
+      fragment.appendChild(node);
+    });
 
   els.dungeonList.replaceChildren(fragment);
 }
