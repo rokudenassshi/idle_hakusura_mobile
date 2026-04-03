@@ -432,8 +432,9 @@ function getDerivedStats(sourceState = state) {
 
   const equippedWeapon = equipItems.find((item) => item.slot === 'weapon');
   const weaponAttackInterval = equippedWeapon?.attackInterval || 1.2;
-  const attackSpeedMultiplier = 1 + baseStats.attackSpeed * 0.02;
-  const attackInterval = Math.max(0.2, weaponAttackInterval / Math.max(0.2, attackSpeedMultiplier));
+  const attackSpeedReduction = baseStats.attackSpeed * 0.05;
+  const attackInterval = Math.max(0.2, weaponAttackInterval - attackSpeedReduction);
+  const appliedAttackSpeedReduction = Math.max(0, weaponAttackInterval - attackInterval);
   const attackSpeed = 1 / Math.max(0.2, attackInterval);
   const critDamageMultiplier = 1.5 + baseStats.critDamage * 0.03;
   const crit = Math.min(0.8, 0.05 + baseStats.crit * 0.005 + bonusCrit);
@@ -446,6 +447,7 @@ function getDerivedStats(sourceState = state) {
     attackPower: Math.floor(10 + baseStats.atk * 2 + equipAtk + bonusAtk),
     attackSpeed,
     attackInterval,
+    attackSpeedReduction: appliedAttackSpeedReduction,
     crit,
     evasion,
     critDamageMultiplier,
@@ -863,7 +865,7 @@ function renderStatus() {
     ['evasion', '回避率', '1ポイントごとに回避率+0.4%'],
     ['crit', '会心率', '1ポイントごとに会心率+0.5%'],
     ['critDamage', '会心ダメージ', '1ポイントごとに会心倍率+3%'],
-    ['attackSpeed', '攻撃速度', '1ポイントごとに攻撃速度+2%（攻撃間隔短縮）'],
+    ['attackSpeed', '攻撃速度', '1ポイントごとに攻撃間隔-0.05秒'],
     ['lifeSteal', 'HP吸収', '1ポイントごとにHP吸収+1%'],
   ];
 
@@ -874,7 +876,7 @@ function renderStatus() {
   els.critText.textContent = `${Math.floor(stats.crit * 100)}%`;
   els.evaText.textContent = `${Math.floor(stats.evasion * 100)}%`;
   els.critDamageText.textContent = `${Math.floor(stats.critDamageMultiplier * 100)}%`;
-  els.attackSpeedTotalText.textContent = `${Math.floor(stats.attackSpeed * 100)}%`;
+  els.attackSpeedTotalText.textContent = `-${stats.attackSpeedReduction.toFixed(2)}秒`;
   els.lifeStealText.textContent = `${Math.floor(stats.lifeSteal * 100)}%`;
   els.pointsText.textContent = state.player.statPoints;
   els.statList.innerHTML = '';
