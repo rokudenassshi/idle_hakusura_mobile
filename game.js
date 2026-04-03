@@ -88,7 +88,10 @@ function buildDungeonFlags(defaultValue = false) {
 
 function ensureDungeonStateShape(sourceState) {
   const firstDungeon = dungeonOrder[0] || "meadow";
-  if (!sourceState.currentDungeon || !dungeonMaster[sourceState.currentDungeon]) {
+  if (
+    !sourceState.currentDungeon ||
+    !dungeonMaster[sourceState.currentDungeon]
+  ) {
     sourceState.currentDungeon = firstDungeon;
   }
 
@@ -191,7 +194,9 @@ function createInitialState() {
 }
 
 function currentDungeon(sourceState = state) {
-  return dungeonMaster[sourceState.currentDungeon] || dungeonMaster[dungeonOrder[0]];
+  return (
+    dungeonMaster[sourceState.currentDungeon] || dungeonMaster[dungeonOrder[0]]
+  );
 }
 
 function currentStage(sourceState = state) {
@@ -586,7 +591,7 @@ function onEnemyDefeated() {
 function onPlayerDefeated() {
   state.autoBattle = false;
   state.player.hp = Math.max(1, Math.floor(state.player.maxHp * 0.5));
-  addLog("力尽きた……。HPを半分回復して戦闘停止。");
+  addLog("力尽きた……。");
   markDirty("battle", "visibility", "options");
   renderAll();
 }
@@ -646,7 +651,10 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
 }
 
 function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const tierPool = availableBasesByTier(armorBases, currentDungeonTier(sourceState));
+  const tierPool = availableBasesByTier(
+    armorBases,
+    currentDungeonTier(sourceState),
+  );
   const base = forcedBase || tierPool[rand(0, tierPool.length - 1)];
   const scale = 1 + stage * 0.09 + currentDungeonTier(sourceState) * 0.18;
 
@@ -672,7 +680,10 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
 }
 
 function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const tierPool = availableBasesByTier(accessoryBases, currentDungeonTier(sourceState));
+  const tierPool = availableBasesByTier(
+    accessoryBases,
+    currentDungeonTier(sourceState),
+  );
   const base = forcedBase || tierPool[rand(0, tierPool.length - 1)];
   const scale = 1 + stage * 0.1 + currentDungeonTier(sourceState) * 0.2;
 
@@ -903,7 +914,10 @@ function renderBattleSummary() {
   setWidth(els.playerHpBar, `${playerHpRate}%`);
   setText(els.expText, `${state.player.exp} / ${state.player.expToNext}`);
   setWidth(els.expBar, `${expRate}%`);
-  setText(els.toggleBattleBtn, state.autoBattle ? "戦闘停止" : "戦闘開始");
+  setText(
+    els.toggleBattleBtn,
+    state.autoBattle ? "ダンジョンから出る" : "戦闘開始",
+  );
   setText(els.levelText, state.player.level);
   setText(els.playerLevelTop, state.player.level);
   setText(els.goldText, state.gold);
