@@ -1,4 +1,5 @@
 const SAVE_KEY = "idle_hakusura_mobile_save_v7_option_rarity";
+const SAVE_EXPORT_SCHEMA = "idle-rokudemonai";
 
 const rarityTable = [
   { key: "common", label: "コモン", optionCount: 1 },
@@ -312,6 +313,9 @@ function bindEvents() {
     localStorage.removeItem(SAVE_KEY);
     location.reload();
   });
+
+  const importInput = document.getElementById("saveDataFileInput");
+  importInput?.addEventListener("change", handleImportSaveFile);
 }
 
 function startLoop() {
@@ -1257,28 +1261,23 @@ function rand(min, max) {
 async function exportSaveData() {
   try {
     const snapshot = buildSaveDataSnapshot();
-    const encrypted = await encryptSaveSnapshot(snapshot);
     const safeVersion = snapshot.gameVersion || "unknown";
     const dateLabel = new Date()
       .toISOString()
       .replace(/[:.]/g, "-")
       .slice(0, 19);
     const filename = `OneMoreFloorRPG_save_${safeVersion}_${dateLabel}.json`;
-    downloadTextFile(filename, JSON.stringify(encrypted));
-    if (typeof log === "function") {
-      log("🔐 セーブデータを保存しました");
-    }
-  } catch (e) {
-    if (typeof log === "function") {
-      log("⚠️ エクスポートに失敗しました");
-    }
+    downloadSnapshotFile(filename, snapshot);
+    addLog("💾 セーブデータを保存しました。");
+  } catch {
+    addLog("⚠️ エクスポートに失敗しました。");
   }
 }
 
 function openImportSaveDialog() {
   const input = document.getElementById("saveDataFileInput");
   if (!input) {
-    if (typeof log === "function") log("⚠️ インポート用入力が見つかりません");
+    addLog("⚠️ インポート用入力が見つかりません。");
     return;
   }
   // 同じファイルを連続で選ぶ場合に備えてリセット
@@ -1290,42 +1289,47 @@ function openImportSaveDialog() {
  * 同一ドメイン上にゲーム以外の localStorage がほぼ無い前提で、全キーを対象にします。
  */
 function buildSaveDataSnapshot() {
-  const now = new Date();
-  const storage = {};
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k) continue;
-      storage[k] = localStorage.getItem(k);
-    }
-  } catch (e) {
-    // 取得に失敗した場合でも、最低限メタだけ返す
-  }
-
-  return {
-    schema: SAVE_EXPORT_SCHEMA_V1,
-    gameVersion: typeof GAME_VERSION === "string" ? GAME_VERSION : null,
-    exportedAt: now.toISOString(),
-    storage,
-  };
+  return SaveTransfer.collectLocalStorageSnapshot({
+    schema: SAVE_EXPORT_SCHEMA,
+    gameVersion: window.APP_VERSION,
+  });
 }
-async function encryptSaveSnapshot(snapshot) {
-  const encoder = new TextEncoder();
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await getSaveExportKey();
-  const encoded = encoder.encode(JSON.stringify(snapshot));
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv },
-    key,
-    encoded,
-  );
-  return {
-    schema: SAVE_EXPORT_SCHEMA_V2,
-    gameVersion: snapshot.gameVersion || null,
-    exportedAt: snapshot.exportedAt,
-    alg: "AES-GCM",
-    kdf: "PBKDF2",
-    iv: uint8ToBase64(iv),
-    data: uint8ToBase64(new Uint8Array(encrypted)),
-  };
+
+async function handleImportSaveFile(event) {
+  const input = event.target;
+  const file = input?.files?.[0];
+  if (!file) return;
+  try {
+    const payload = await SaveTransfer.readSnapshotFromFile(file);
+    const snapshot = decodeSavePayload(payload);
+    applyImportedSnapshot(snapshot);
+    addLog("📥 セーブデータをインポートしました。");
+    saveGame();
+    renderAll();
+  } catch {
+    addLog("⚠️ インポートに失敗しました。ファイル形式を確認してください。");
+  } finally {
+    input.value = "";
+  }
+}
+
+function decodeSavePayload(payload) {
+  return SaveTransfer.validateSnapshotSchema(payload, SAVE_EXPORT_SCHEMA);
+}
+
+function applyImportedSnapshot(snapshot) {
+  SaveTransfer.restoreLocalStorageSnapshot(snapshot);
+
+  const imported = loadGame();
+  if (!imported) {
+    throw new Error("save data not found");
+  }
+  state = imported;
+  normalizePlayerStats(state);
+  ensureEnemy(true);
+  markDirty("battle", "dungeon", "bag", "equipment", "status", "visibility");
+}
+
+function downloadSnapshotFile(filename, snapshot) {
+  SaveTransfer.downloadSnapshotAsJson(filename, snapshot);
 }

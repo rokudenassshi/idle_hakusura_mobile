@@ -17,6 +17,7 @@
       document.write(`<link rel="stylesheet" href="style.css?v=${encodedVersion}">`);
       document.write(`<script src="enemy.js?v=${encodedVersion}"><\/script>`);
       document.write(`<script src="dungeon.js?v=${encodedVersion}"><\/script>`);
+      document.write(`<script src="save-transfer.js?v=${encodedVersion}"><\/script>`);
       document.write(`<script src="game.js?v=${encodedVersion}"><\/script>`);
     })();
   </script>
@@ -161,6 +162,7 @@
             <button id="saveBtn" class="primary wide-btn">セーブ</button>
             <button class="status-save-button" type="button" onclick="openImportSaveDialog()">インポート</button>
             <button class="status-save-button" type="button" onclick="exportSaveData()">エクスポート</button>
+            <input id="saveDataFileInput" type="file" accept=".json,application/json" class="hidden" />
           </div>
         </div>
       </section>
