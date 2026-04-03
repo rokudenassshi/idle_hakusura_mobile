@@ -485,6 +485,7 @@ function getEquippedItems(sourceState = state) {
 function getDerivedStats(sourceState = state) {
   const baseStats = normalizePlayerStats(sourceState);
   const equipItems = getEquippedItems(sourceState);
+  const titleBonus = collectTitleAffixBonus(equipItems);
   const equipAtk = equipItems.reduce((sum, item) => sum + item.atk, 0);
   const equipHp = equipItems.reduce((sum, item) => sum + item.hp, 0);
   const equipDef = equipItems.reduce((sum, item) => sum + item.def, 0);
@@ -498,7 +499,8 @@ function getDerivedStats(sourceState = state) {
 
   const equippedWeapon = equipItems.find((item) => item.slot === "weapon");
   const weaponAttackInterval = equippedWeapon?.attackInterval || 1.2;
-  const attackSpeedReduction = baseStats.attackSpeed * 0.05;
+  const attackSpeedReduction =
+    baseStats.attackSpeed * 0.05 + titleBonus.attackIntervalReduction;
   const attackInterval = Math.max(
     0.2,
     weaponAttackInterval - attackSpeedReduction,
@@ -514,9 +516,17 @@ function getDerivedStats(sourceState = state) {
   const lifeSteal = Math.min(0.5, baseStats.lifeSteal * 0.01);
 
   return {
-    maxHp: 50 + baseStats.maxHp * 8 + equipHp + bonusHp,
-    def: Math.floor(baseStats.def * 1.5 + equipDef),
-    attackPower: Math.floor(10 + baseStats.atk * 2 + equipAtk + bonusAtk),
+    maxHp: Math.floor(
+      (50 + baseStats.maxHp * 8 + equipHp + bonusHp) *
+        (1 + titleBonus.hpMultiplier),
+    ),
+    def: Math.floor(
+      (baseStats.def * 1.5 + equipDef) * (1 + titleBonus.defMultiplier),
+    ),
+    attackPower: Math.floor(
+      (10 + baseStats.atk * 2 + equipAtk + bonusAtk) *
+        (1 + titleBonus.attackMultiplier),
+    ),
     attackSpeed,
     attackInterval,
     attackSpeedReduction: appliedAttackSpeedReduction,
@@ -616,9 +626,9 @@ function rollDrop() {
   const optionCount = rollOptionCount();
   const stage = currentStage();
   const roll = Math.random();
-  if (roll < 1 / 3) return makeWeapon(state, stage, optionCount);
-  if (roll < 2 / 3) return makeArmor(state, stage, optionCount);
-  return makeAccessory(state, stage, optionCount);
+  if (roll < 1 / 3) return maybeApplyTitleAffix(makeWeapon(state, stage, optionCount));
+  if (roll < 2 / 3) return maybeApplyTitleAffix(makeArmor(state, stage, optionCount));
+  return maybeApplyTitleAffix(makeAccessory(state, stage, optionCount));
 }
 
 function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
@@ -1138,10 +1148,11 @@ function statusButton(label) {
 function bagItemName(item) {
   if (!item) return "";
   const baseName = item.baseName || item.name || "";
-  const prefix = `${item.rarity} `;
+  const titlePrefix = titleAffixPrefix(item);
+  const prefix = `${item.rarity} ${titlePrefix}`;
   return item.rarity && baseName.startsWith(prefix)
     ? baseName.slice(prefix.length)
-    : baseName;
+    : `${titlePrefix}${baseName}`;
 }
 
 function itemStatText(item) {
@@ -1162,6 +1173,10 @@ function itemStatText(item) {
     item.options.forEach((opt) => options.push(`${opt.label} +${opt.value}`));
   } else if (item.optionCount) {
     options.push(`${item.optionCount}個`);
+  }
+  const titleText = titleAffixStatText(item);
+  if (titleText) {
+    options.push(`称号効果: ${titleText}`);
   }
 
   const lines = [];
