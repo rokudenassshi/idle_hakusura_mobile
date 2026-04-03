@@ -1178,9 +1178,6 @@ function itemStatText(item) {
     options.push(`${item.optionCount}個`);
   }
   const titleText = titleAffixStatText(item);
-  if (titleText) {
-    options.push(`称号効果: ${titleText}`);
-  }
 
   const lines = [];
   if (fixed.length)
@@ -1190,6 +1187,10 @@ function itemStatText(item) {
   if (options.length)
     lines.push(
       `<div class="stat-inline"><span class="stat-label">オプション</span><span>${options.join(" / ")}</span></div>`,
+    );
+  if (titleText)
+    lines.push(
+      `<div class="stat-inline"><span class="stat-label">称号効果</span><span>${titleText}</span></div>`,
     );
   return lines.join("");
 }

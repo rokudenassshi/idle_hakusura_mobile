@@ -1,4 +1,4 @@
-const TITLE_DROP_RATE = 0.0001;
+const TITLE_DROP_RATE = 1.0001;
 const TITLE_AFFIX_TABLE = [
   {
     key: "vitality",
