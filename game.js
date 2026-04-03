@@ -463,7 +463,7 @@ function createEnemy(stage, dungeon) {
   const baseExp = enemyDef.exp + stage * 2.2 + tier * 1.2;
   const baseGold = enemyDef.gold + stage * 2.35 + tier * 1.05;
   return {
-    name: isBossFloor ? enemyDef.name : `${enemyDef.name} ${stage}`,
+    name: enemyDef.name,
     rank,
     maxHp: baseHp,
     hp: baseHp,
