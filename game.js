@@ -25,7 +25,7 @@ const armorBases = [
 const accessoryBases = [
   { name: '生命の指輪', hp: 22, vit: 2 },
   { name: '俊足のお守り', agi: 4, def: 1 },
-  { name: '賢者のペンダント', int: 3, def: 1, hp: 8 },
+  { name: '守護のペンダント', vit: 3, def: 1, hp: 8 },
   { name: '戦士の紋章', str: 3, hp: 10 },
 ];
 
@@ -52,7 +52,6 @@ function makeOptionPool(slot) {
     return [
       { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
       { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
-      { key: 'int', label: 'かしこさ', min: 1, max: 4, scale: 0.16 },
       { key: 'atk', label: '攻撃', min: 1, max: 6, scale: 0.22 },
       { key: 'def', label: '防御', min: 1, max: 3, scale: 0.12 },
     ];
@@ -61,7 +60,6 @@ function makeOptionPool(slot) {
     return [
       { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
       { key: 'str', label: 'ちから', min: 1, max: 3, scale: 0.12 },
-      { key: 'int', label: 'かしこさ', min: 1, max: 3, scale: 0.12 },
       { key: 'hp', label: 'HP', min: 6, max: 18, scale: 0.3 },
       { key: 'def', label: '防御', min: 1, max: 5, scale: 0.2 },
     ];
@@ -69,7 +67,6 @@ function makeOptionPool(slot) {
   return [
     { key: 'str', label: 'ちから', min: 1, max: 4, scale: 0.16 },
     { key: 'vit', label: 'たいりょく', min: 1, max: 4, scale: 0.16 },
-    { key: 'int', label: 'かしこさ', min: 1, max: 4, scale: 0.16 },
     { key: 'agi', label: 'すばやさ', min: 1, max: 4, scale: 0.16 },
     { key: 'hp', label: 'HP', min: 5, max: 16, scale: 0.26 },
     { key: 'def', label: '防御', min: 1, max: 4, scale: 0.16 },
@@ -136,7 +133,7 @@ function createInitialState() {
       exp: 0,
       expToNext: 15,
       statPoints: 0,
-      stats: { str: 5, vit: 5, int: 5, agi: 5 },
+      stats: { str: 5, vit: 5, agi: 5 },
       hp: 0,
       maxHp: 0,
     },
@@ -214,7 +211,6 @@ function mapElements() {
     maxHpText: byId('maxHpText'),
     defText: byId('defText'),
     atkText: byId('atkText'),
-    intPowerText: byId('intPowerText'),
     critText: byId('critText'),
     evaText: byId('evaText'),
     pointsText: byId('pointsText'),
@@ -413,12 +409,10 @@ function getDerivedStats(sourceState = state) {
   const equipDef = equipItems.reduce((sum, item) => sum + item.def, 0);
   const bonusStr = equipItems.reduce((sum, item) => sum + item.str, 0);
   const bonusVit = equipItems.reduce((sum, item) => sum + item.vit, 0);
-  const bonusInt = equipItems.reduce((sum, item) => sum + item.int, 0);
   const bonusAgi = equipItems.reduce((sum, item) => sum + item.agi, 0);
 
   const str = baseStats.str + bonusStr;
   const vit = baseStats.vit + bonusVit;
-  const int = baseStats.int + bonusInt;
   const agi = baseStats.agi + bonusAgi;
   const equippedWeapon = equipItems.find((item) => item.slot === 'weapon');
   const attackInterval = equippedWeapon?.attackInterval || 1.2;
@@ -427,7 +421,6 @@ function getDerivedStats(sourceState = state) {
   return {
     str,
     vit,
-    int,
     agi,
     maxHp: 30 + vit * 5 + equipHp,
     def: Math.floor(vit * 0.7 + agi * 0.2 + equipDef),
@@ -546,7 +539,6 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
     def: 0,
     str: 0,
     vit: 0,
-    int: 0,
     agi: 0,
     price: Math.floor(rand(base.minAtk, base.maxAtk) * 6 * scale),
     weaponType: base.weaponType,
@@ -573,7 +565,6 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
     def: Math.max(1, Math.floor(rand(base.minDef, base.maxDef) * scale)),
     str: 0,
     vit: 0,
-    int: 0,
     agi: 0,
     price: Math.floor((base.hp + base.maxDef * 16) * scale),
   };
@@ -599,7 +590,6 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
     def: Math.floor((base.def || 0) * scale),
     str: Math.floor((base.str || 0) * scale),
     vit: Math.floor((base.vit || 0) * scale),
-    int: Math.floor((base.int || 0) * scale),
     agi: Math.floor((base.agi || 0) * scale),
     price: Math.floor(((base.hp || 0) + (base.def || 0) * 8 + 20) * scale),
   };
@@ -842,7 +832,6 @@ function renderStatus() {
   const statDefs = [
     ['str', 'ちから', '物理攻撃が上がる'],
     ['vit', 'たいりょく', '最大HPと防御が上がる'],
-    ['int', 'かしこさ', '装備の補助ステータス'],
     ['agi', 'すばやさ', '回避率と会心率が上がる'],
   ];
 
@@ -850,7 +839,6 @@ function renderStatus() {
   els.maxHpText.textContent = stats.maxHp;
   els.defText.textContent = stats.def;
   els.atkText.textContent = stats.attackPower;
-  els.intPowerText.textContent = stats.int;
   els.critText.textContent = `${Math.floor(stats.crit * 100)}%`;
   els.evaText.textContent = `${Math.floor(stats.evasion * 100)}%`;
   els.pointsText.textContent = state.player.statPoints;
@@ -962,7 +950,6 @@ function itemStatText(item) {
   if (item.def) fixed.push(`防御 +${item.def}`);
   if (item.str) fixed.push(`ちから +${item.str}`);
   if (item.vit) fixed.push(`たいりょく +${item.vit}`);
-  if (item.int) fixed.push(`かしこさ +${item.int}`);
   if (item.agi) fixed.push(`すばやさ +${item.agi}`);
 
   const options = [];
