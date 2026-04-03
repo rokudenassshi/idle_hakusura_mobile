@@ -224,7 +224,6 @@ function mapElements() {
     equipAccessoryBtn: byId('equipAccessoryBtn'),
     bagList: byId('bagList'),
     bagCountText: byId('bagCountText'),
-    statusDungeonText: byId('statusDungeonText'),
     saveBtn: byId('saveBtn'),
     resetBtn: byId('resetBtn'),
     itemCardTemplate: byId('itemCardTemplate'),
@@ -855,7 +854,6 @@ function renderStatus() {
   els.critText.textContent = `${Math.floor(stats.crit * 100)}%`;
   els.evaText.textContent = `${Math.floor(stats.evasion * 100)}%`;
   els.pointsText.textContent = state.player.statPoints;
-  els.statusDungeonText.textContent = currentDungeon().name;
   els.statList.innerHTML = '';
 
   statDefs.forEach(([key, label, desc]) => {
