@@ -122,6 +122,7 @@ function availableBasesByTier(baseList, tier) {
 let state = loadGame() ?? createInitialState();
 ensureDungeonStateShape(state);
 normalizePlayerStats(state);
+normalizeBagItems(state);
 let els = {};
 let playerAttackCooldown = 0;
 let enemyAttackCooldown = 0;
@@ -271,7 +272,6 @@ function mapElements() {
     equipArmorBtn: byId("equipArmorBtn"),
     equipAccessoryBtn: byId("equipAccessoryBtn"),
     bagList: byId("bagList"),
-    bagCountText: byId("bagCountText"),
     saveBtn: byId("saveBtn"),
     resetBtn: byId("resetBtn"),
     itemCardTemplate: byId("itemCardTemplate"),
@@ -299,6 +299,7 @@ function bindEvents() {
     if (action === "equip-weapon") equipItem(itemId, "weapon");
     else if (action === "equip-armor") equipItem(itemId, "armor");
     else if (action === "equip-accessory") equipItem(itemId, "accessory");
+    else if (action === "toggle-lock") toggleItemLock(itemId);
     else if (action === "sell") sellItem(itemId);
   });
 
@@ -643,6 +644,7 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
   const item = {
     id: ++sourceState.lastItemId,
     slot: "weapon",
+    locked: false,
     rarity: "",
     optionCount: 0,
     options: [],
@@ -674,6 +676,7 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
   const item = {
     id: ++sourceState.lastItemId,
     slot: "armor",
+    locked: false,
     rarity: "",
     optionCount: 0,
     options: [],
@@ -703,6 +706,7 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
   const item = {
     id: ++sourceState.lastItemId,
     slot: "accessory",
+    locked: false,
     rarity: "",
     optionCount: 0,
     options: [],
@@ -729,6 +733,13 @@ function getItemById(id, sourceState = state) {
   return sourceState.bag.find((item) => item.id === id) || null;
 }
 
+function normalizeBagItems(sourceState = state) {
+  if (!Array.isArray(sourceState?.bag)) return;
+  sourceState.bag.forEach((item) => {
+    item.locked = !!item.locked;
+  });
+}
+
 function canEquip(item, slot) {
   if (!item) return false;
   if (slot === "weapon") return item.slot === "weapon";
@@ -747,14 +758,29 @@ function equipItem(itemId, slot) {
   renderAll();
 }
 
+function toggleItemLock(itemId) {
+  const item = getItemById(itemId);
+  if (!item) return;
+  item.locked = !item.locked;
+  addLog(`${bagItemName(item)} を${item.locked ? "ロック" : "ロック解除"}した。`);
+  markDirty("bag");
+  renderAll();
+}
+
 function sellItem(itemId) {
   if (Object.values(state.equipment).includes(itemId)) {
     addLog("装備中のアイテムは売却できません。");
     return;
   }
-  const index = state.bag.findIndex((item) => item.id === itemId);
+  const item = getItemById(itemId);
+  if (!item) return;
+  if (item.locked) {
+    addLog(`${bagItemName(item)} はロック中のため売却できません。`);
+    return;
+  }
+  const index = state.bag.findIndex((bagItem) => bagItem.id === itemId);
   if (index < 0) return;
-  const [item] = state.bag.splice(index, 1);
+  state.bag.splice(index, 1);
   state.gold += Math.max(1, Math.floor(item.price * 0.5));
   addLog(`${bagItemName(item)} を売却した。`);
   markDirty("bag", "equipment", "options");
@@ -1085,7 +1111,6 @@ function renderEquipment() {
 
 function renderBag() {
   if (!els.bagList) return;
-  els.bagCountText.textContent = state.bag.length;
 
   if (!state.bag.length) {
     els.bagList.innerHTML = '<div class="empty">バッグは空です。</div>';
@@ -1095,7 +1120,9 @@ function renderBag() {
   const fragment = document.createDocumentFragment();
 
   const sortedBag = [...state.bag].sort(
-    (a, b) => Number(isEquipped(b.id)) - Number(isEquipped(a.id)),
+    (a, b) =>
+      Number(isEquipped(b.id)) - Number(isEquipped(a.id)) ||
+      Number(isLocked(b.id)) - Number(isLocked(a.id)),
   );
 
   sortedBag.forEach((item) => {
