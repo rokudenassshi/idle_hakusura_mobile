@@ -99,6 +99,7 @@ function nextDungeonKey(key) {
 }
 
 let state = loadGame() ?? createInitialState();
+normalizePlayerStats(state);
 let els = {};
 let playerAttackCooldown = 0;
 let enemyAttackCooldown = 0;
@@ -133,7 +134,16 @@ function createInitialState() {
       exp: 0,
       expToNext: 15,
       statPoints: 0,
-      stats: { str: 5, vit: 5, agi: 5 },
+      stats: {
+        atk: 0,
+        maxHp: 0,
+        def: 0,
+        evasion: 0,
+        crit: 0,
+        critDamage: 0,
+        attackSpeed: 0,
+        lifeSteal: 0,
+      },
       hp: 0,
       maxHp: 0,
     },
@@ -213,6 +223,9 @@ function mapElements() {
     atkText: byId('atkText'),
     critText: byId('critText'),
     evaText: byId('evaText'),
+    critDamageText: byId('critDamageText'),
+    attackSpeedTotalText: byId('attackSpeedTotalText'),
+    lifeStealText: byId('lifeStealText'),
     pointsText: byId('pointsText'),
     statList: byId('statList'),
     equipWeaponBtn: byId('equipWeaponBtn'),
@@ -304,6 +317,11 @@ function tick(delta) {
     const damage = computePlayerDamage(pStats);
     state.enemy.hp = Math.max(0, state.enemy.hp - damage);
     addLog(`あなたの攻撃！ ${state.enemy.name} に ${damage} ダメージ。`);
+    const steal = Math.floor(damage * pStats.lifeSteal);
+    if (steal > 0) {
+      state.player.hp = Math.min(state.player.maxHp, state.player.hp + steal);
+      addLog(`HPを ${steal} 吸収した。`);
+    }
     playerAttackCooldown += 1 / Math.max(0.2, pStats.attackSpeed);
     changed = true;
     if (state.enemy.hp <= 0) {
@@ -402,33 +420,36 @@ function getEquippedItems(sourceState = state) {
 }
 
 function getDerivedStats(sourceState = state) {
-  const baseStats = sourceState.player.stats;
+  const baseStats = normalizePlayerStats(sourceState);
   const equipItems = getEquippedItems(sourceState);
   const equipAtk = equipItems.reduce((sum, item) => sum + item.atk, 0);
   const equipHp = equipItems.reduce((sum, item) => sum + item.hp, 0);
   const equipDef = equipItems.reduce((sum, item) => sum + item.def, 0);
-  const bonusStr = equipItems.reduce((sum, item) => sum + item.str, 0);
-  const bonusVit = equipItems.reduce((sum, item) => sum + item.vit, 0);
-  const bonusAgi = equipItems.reduce((sum, item) => sum + item.agi, 0);
+  const bonusAtk = equipItems.reduce((sum, item) => sum + item.str, 0);
+  const bonusHp = equipItems.reduce((sum, item) => sum + item.vit * 8, 0);
+  const bonusEvasion = equipItems.reduce((sum, item) => sum + item.agi * 0.004, 0);
+  const bonusCrit = equipItems.reduce((sum, item) => sum + item.agi * 0.004, 0);
 
-  const str = baseStats.str + bonusStr;
-  const vit = baseStats.vit + bonusVit;
-  const agi = baseStats.agi + bonusAgi;
   const equippedWeapon = equipItems.find((item) => item.slot === 'weapon');
-  const attackInterval = equippedWeapon?.attackInterval || 1.2;
+  const weaponAttackInterval = equippedWeapon?.attackInterval || 1.2;
+  const attackSpeedMultiplier = 1 + baseStats.attackSpeed * 0.02;
+  const attackInterval = Math.max(0.2, weaponAttackInterval / Math.max(0.2, attackSpeedMultiplier));
   const attackSpeed = 1 / Math.max(0.2, attackInterval);
+  const critDamageMultiplier = 1.5 + baseStats.critDamage * 0.03;
+  const crit = Math.min(0.8, 0.05 + baseStats.crit * 0.005 + bonusCrit);
+  const evasion = Math.min(0.6, baseStats.evasion * 0.004 + bonusEvasion);
+  const lifeSteal = Math.min(0.5, baseStats.lifeSteal * 0.01);
 
   return {
-    str,
-    vit,
-    agi,
-    maxHp: 30 + vit * 5 + equipHp,
-    def: Math.floor(vit * 0.7 + agi * 0.2 + equipDef),
-    attackPower: Math.floor(str * 2.4 + equipAtk),
+    maxHp: 60 + baseStats.maxHp * 8 + equipHp + bonusHp,
+    def: Math.floor(baseStats.def * 1.5 + equipDef),
+    attackPower: Math.floor(10 + baseStats.atk * 2 + equipAtk + bonusAtk),
     attackSpeed,
     attackInterval,
-    crit: Math.min(0.45, 0.03 + agi * 0.004),
-    evasion: Math.min(0.35, 0.02 + agi * 0.003),
+    crit,
+    evasion,
+    critDamageMultiplier,
+    lifeSteal,
   };
 }
 
@@ -441,7 +462,7 @@ function recalcPlayer(sourceState = state) {
 function computePlayerDamage(pStats) {
   let damage = rand(Math.floor(pStats.attackPower * 0.75), Math.floor(pStats.attackPower * 1.15));
   if (Math.random() < pStats.crit) {
-    damage = Math.floor(damage * 1.7);
+    damage = Math.floor(damage * pStats.critDamageMultiplier);
     addLog('会心の一撃！');
   }
   return Math.max(1, damage);
@@ -635,11 +656,17 @@ function sellItem(itemId) {
   renderAll();
 }
 
-function addStat(statKey) {
-  if (state.player.statPoints <= 0) return;
+function addStat(statKey, delta = 1) {
   if (!(statKey in state.player.stats)) return;
-  state.player.stats[statKey] += 1;
-  state.player.statPoints -= 1;
+  if (delta > 0) {
+    if (state.player.statPoints <= 0) return;
+    state.player.stats[statKey] += 1;
+    state.player.statPoints -= 1;
+  } else {
+    if (state.player.stats[statKey] <= 0) return;
+    state.player.stats[statKey] -= 1;
+    state.player.statPoints += 1;
+  }
   recalcPlayer(state);
   markDirty('status', 'battle', 'options');
   renderAll();
@@ -830,9 +857,14 @@ function renderStatus() {
   if (!els.statusLevel || !els.statList) return;
   const stats = getDerivedStats(state);
   const statDefs = [
-    ['str', 'ちから', '物理攻撃が上がる'],
-    ['vit', 'たいりょく', '最大HPと防御が上がる'],
-    ['agi', 'すばやさ', '回避率と会心率が上がる'],
+    ['atk', '攻撃力', '1ポイントごとに攻撃力+2'],
+    ['maxHp', '最大HP', '1ポイントごとに最大HP+8'],
+    ['def', '防御力', '1ポイントごとに防御計算値+1.5（表示は切り捨て）'],
+    ['evasion', '回避率', '1ポイントごとに回避率+0.4%'],
+    ['crit', '会心率', '1ポイントごとに会心率+0.5%'],
+    ['critDamage', '会心ダメージ', '1ポイントごとに会心倍率+3%'],
+    ['attackSpeed', '攻撃速度', '1ポイントごとに攻撃速度+2%（攻撃間隔短縮）'],
+    ['lifeSteal', 'HP吸収', '1ポイントごとにHP吸収+1%'],
   ];
 
   els.statusLevel.textContent = state.player.level;
@@ -841,6 +873,9 @@ function renderStatus() {
   els.atkText.textContent = stats.attackPower;
   els.critText.textContent = `${Math.floor(stats.crit * 100)}%`;
   els.evaText.textContent = `${Math.floor(stats.evasion * 100)}%`;
+  els.critDamageText.textContent = `${Math.floor(stats.critDamageMultiplier * 100)}%`;
+  els.attackSpeedTotalText.textContent = `${Math.floor(stats.attackSpeed * 100)}%`;
+  els.lifeStealText.textContent = `${Math.floor(stats.lifeSteal * 100)}%`;
   els.pointsText.textContent = state.player.statPoints;
   els.statList.innerHTML = '';
 
@@ -853,13 +888,52 @@ function renderStatus() {
         <div class="stat-desc">${desc}</div>
       </div>
       <strong>${state.player.stats[key]}</strong>
-      <button class="plus-btn">+1</button>
+      <div class="stat-actions">
+        <button class="minus-btn">-1</button>
+        <button class="plus-btn">+1</button>
+      </div>
     `;
-    const button = row.querySelector('button');
-    button.disabled = state.player.statPoints <= 0;
-    button.addEventListener('click', () => addStat(key));
+    const plusButton = row.querySelector('.plus-btn');
+    const minusButton = row.querySelector('.minus-btn');
+    plusButton.disabled = state.player.statPoints <= 0;
+    minusButton.disabled = state.player.stats[key] <= 0;
+    plusButton.addEventListener('click', () => addStat(key, 1));
+    minusButton.addEventListener('click', () => addStat(key, -1));
     els.statList.appendChild(row);
   });
+}
+
+
+function normalizePlayerStats(sourceState = state) {
+  const current = sourceState?.player?.stats || {};
+  if ('atk' in current) {
+    sourceState.player.stats = {
+      atk: Math.max(0, current.atk || 0),
+      maxHp: Math.max(0, current.maxHp || 0),
+      def: Math.max(0, current.def || 0),
+      evasion: Math.max(0, current.evasion || 0),
+      crit: Math.max(0, current.crit || 0),
+      critDamage: Math.max(0, current.critDamage || 0),
+      attackSpeed: Math.max(0, current.attackSpeed || 0),
+      lifeSteal: Math.max(0, current.lifeSteal || 0),
+    };
+    return sourceState.player.stats;
+  }
+
+  const str = Math.max(0, current.str || 0);
+  const vit = Math.max(0, current.vit || 0);
+  const agi = Math.max(0, current.agi || 0);
+  sourceState.player.stats = {
+    atk: str,
+    maxHp: vit,
+    def: vit,
+    evasion: agi,
+    crit: agi,
+    critDamage: 0,
+    attackSpeed: Math.floor(agi / 2),
+    lifeSteal: 0,
+  };
+  return sourceState.player.stats;
 }
 
 function renderEquipment() {
