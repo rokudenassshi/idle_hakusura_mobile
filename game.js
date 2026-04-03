@@ -9,54 +9,9 @@ const rarityTable = [
   { key: "legendary", label: "レジェンダリー", optionCount: 5 },
 ];
 
-const weaponBases = [
-  {
-    name: "ショートソード",
-    weaponType: "剣",
-    minAtk: 4,
-    maxAtk: 8,
-    attackInterval: 1.0,
-  },
-  {
-    name: "バトルアクス",
-    weaponType: "斧",
-    minAtk: 7,
-    maxAtk: 12,
-    attackInterval: 2.0,
-  },
-  {
-    name: "ダガー",
-    weaponType: "短剣",
-    minAtk: 3,
-    maxAtk: 6,
-    attackInterval: 0.8,
-  },
-  {
-    name: "ワンド",
-    weaponType: "杖",
-    minAtk: 3,
-    maxAtk: 7,
-    attackInterval: 1.2,
-  },
-];
-
-const armorBases = [
-  { name: "レザーアーマー", minDef: 2, maxDef: 4, hp: 14 },
-  { name: "チェインメイル", minDef: 4, maxDef: 7, hp: 22 },
-  { name: "ミスリルアーマー", minDef: 6, maxDef: 10, hp: 30 },
-  { name: "ローブ", minDef: 1, maxDef: 3, hp: 10 },
-];
-
-const accessoryBases = [
-  { name: "生命の指輪", hp: 22, vit: 2 },
-  { name: "俊足のお守り", agi: 4, def: 1 },
-  { name: "守護のペンダント", vit: 3, def: 1, hp: 8 },
-  { name: "戦士の紋章", str: 3, hp: 10 },
-];
-
 const dungeonMaster = DUNGEON_MASTER;
 
-const dungeonOrder = ["meadow", "cave"];
+const dungeonOrder = Object.keys(dungeonMaster);
 
 function rarityByOptionCount(optionCount) {
   return (
@@ -123,7 +78,46 @@ function nextDungeonKey(key) {
   return index >= 0 ? (dungeonOrder[index + 1] ?? null) : null;
 }
 
+function buildDungeonProgress() {
+  return Object.fromEntries(dungeonOrder.map((key) => [key, 1]));
+}
+
+function buildDungeonFlags(defaultValue = false) {
+  return Object.fromEntries(dungeonOrder.map((key) => [key, defaultValue]));
+}
+
+function ensureDungeonStateShape(sourceState) {
+  const firstDungeon = dungeonOrder[0] || "meadow";
+  if (!sourceState.currentDungeon || !dungeonMaster[sourceState.currentDungeon]) {
+    sourceState.currentDungeon = firstDungeon;
+  }
+
+  sourceState.dungeonProgress = {
+    ...buildDungeonProgress(),
+    ...(sourceState.dungeonProgress || {}),
+  };
+  sourceState.unlockedDungeons = {
+    ...buildDungeonFlags(false),
+    ...(sourceState.unlockedDungeons || {}),
+  };
+  sourceState.clearedDungeons = {
+    ...buildDungeonFlags(false),
+    ...(sourceState.clearedDungeons || {}),
+  };
+  sourceState.unlockedDungeons[firstDungeon] = true;
+}
+
+function currentDungeonTier(sourceState = state) {
+  return Math.max(0, dungeonOrder.indexOf(currentDungeon(sourceState).key));
+}
+
+function availableBasesByTier(baseList, tier) {
+  const available = baseList.filter((base) => (base.minTier || 0) <= tier);
+  return available.length ? available : baseList;
+}
+
 let state = loadGame() ?? createInitialState();
+ensureDungeonStateShape(state);
 normalizePlayerStats(state);
 let els = {};
 let playerAttackCooldown = 0;
@@ -162,10 +156,10 @@ function createInitialState() {
     autoBattle: false,
     gold: 0,
     kills: 0,
-    currentDungeon: "meadow",
-    unlockedDungeons: { meadow: true, cave: false },
-    clearedDungeons: { meadow: false, cave: false },
-    dungeonProgress: { meadow: 1, cave: 1 },
+    currentDungeon: dungeonOrder[0] || "meadow",
+    unlockedDungeons: buildDungeonFlags(false),
+    clearedDungeons: buildDungeonFlags(false),
+    dungeonProgress: buildDungeonProgress(),
     player: {
       level: 1,
       exp: 0,
@@ -189,6 +183,7 @@ function createInitialState() {
     equipment: { weapon: null, armor: null, accessory: null },
     lastItemId: 0,
   };
+  ensureDungeonStateShape(base);
   grantStarterItems(base);
   recalcPlayer(base);
   base.player.hp = base.player.maxHp;
@@ -196,11 +191,11 @@ function createInitialState() {
 }
 
 function currentDungeon(sourceState = state) {
-  return dungeonMaster[sourceState.currentDungeon] || dungeonMaster.meadow;
+  return dungeonMaster[sourceState.currentDungeon] || dungeonMaster[dungeonOrder[0]];
 }
 
 function currentStage(sourceState = state) {
-  return sourceState.dungeonProgress[currentDungeon(sourceState).key];
+  return sourceState.dungeonProgress[currentDungeon(sourceState).key] || 1;
 }
 
 function setCurrentStage(value, sourceState = state) {
@@ -455,26 +450,23 @@ function createEnemy(stage, dungeon) {
     ? dungeonBossDef(dungeon)
     : enemyTable[(stage + tier) % enemyTable.length];
   const rank = isBossFloor ? "BOSS" : "";
-  const rankMul = isBossFloor ? 2.7 : 1;
-  const hpBase = enemyDef.hp + stage * 18 + tier * 10;
+  const rankMul = isBossFloor ? 2.15 : 1;
+  const hpBase = enemyDef.hp + stage * 14 + tier * 8;
   const atkBase =
-    (enemyDef.atk + stage * 2.4 + tier * 1.8) * (isBossFloor ? 1.85 : 1);
-  const baseHp = Math.floor(hpBase * rankMul * dungeon.hpScale);
-  const baseExp = enemyDef.exp + stage * 2.6 + tier * 1.4;
-  const baseGold = enemyDef.gold + stage * 2.9 + tier * 1.1;
+    (enemyDef.atk + stage * 1.8 + tier * 1.35) * (isBossFloor ? 1.45 : 1);
+  const baseHp = Math.floor(hpBase * rankMul);
+  const baseExp = enemyDef.exp + stage * 2.2 + tier * 1.2;
+  const baseGold = enemyDef.gold + stage * 2.35 + tier * 1.05;
   return {
     name: isBossFloor ? enemyDef.name : `${enemyDef.name} ${stage}`,
     rank,
     maxHp: baseHp,
     hp: baseHp,
-    atkMin: Math.max(1, Math.floor(atkBase * dungeon.atkScale * 0.75)),
-    atkMax: Math.max(2, Math.floor(atkBase * dungeon.atkScale * 1.2)),
-    attackInterval: Math.max(
-      0.55,
-      enemyDef.attackInterval / dungeon.speedScale,
-    ),
-    exp: Math.floor(baseExp * rankMul * dungeon.expScale),
-    gold: Math.floor(baseGold * rankMul * dungeon.goldScale),
+    atkMin: Math.max(1, Math.floor(atkBase * 0.78)),
+    atkMax: Math.max(2, Math.floor(atkBase * 1.18)),
+    attackInterval: Math.max(0.55, enemyDef.attackInterval),
+    exp: Math.floor(baseExp * rankMul),
+    gold: Math.floor(baseGold * rankMul),
     isBoss: isBossFloor,
   };
 }
@@ -625,12 +617,10 @@ function rollDrop() {
 }
 
 function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const basePool =
-    currentDungeon(sourceState).key === "cave"
-      ? [weaponBases[1], weaponBases[0], weaponBases[3], weaponBases[2]]
-      : weaponBases;
+  const dungeonIndex = currentDungeonTier(sourceState);
+  const basePool = availableBasesByTier(weaponBases, dungeonIndex);
   const base = forcedBase || basePool[rand(0, basePool.length - 1)];
-  const scale = 1 + stage * 0.11;
+  const scale = 1 + stage * 0.11 + dungeonIndex * 0.2;
 
   const item = {
     id: ++sourceState.lastItemId,
@@ -656,8 +646,9 @@ function makeWeapon(sourceState, stage, optionCount = 1, forcedBase = null) {
 }
 
 function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const base = forcedBase || armorBases[rand(0, armorBases.length - 1)];
-  const scale = 1 + stage * 0.09;
+  const tierPool = availableBasesByTier(armorBases, currentDungeonTier(sourceState));
+  const base = forcedBase || tierPool[rand(0, tierPool.length - 1)];
+  const scale = 1 + stage * 0.09 + currentDungeonTier(sourceState) * 0.18;
 
   const item = {
     id: ++sourceState.lastItemId,
@@ -681,8 +672,9 @@ function makeArmor(sourceState, stage, optionCount = 1, forcedBase = null) {
 }
 
 function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
-  const base = forcedBase || accessoryBases[rand(0, accessoryBases.length - 1)];
-  const scale = 1 + stage * 0.1;
+  const tierPool = availableBasesByTier(accessoryBases, currentDungeonTier(sourceState));
+  const base = forcedBase || tierPool[rand(0, tierPool.length - 1)];
+  const scale = 1 + stage * 0.1 + currentDungeonTier(sourceState) * 0.2;
 
   const item = {
     id: ++sourceState.lastItemId,
@@ -692,13 +684,16 @@ function makeAccessory(sourceState, stage, optionCount = 1, forcedBase = null) {
     options: [],
     name: base.name,
     baseName: base.name,
-    atk: 0,
+    atk: Math.floor((base.atk || 0) * scale),
     hp: Math.floor((base.hp || 0) * scale),
     def: Math.floor((base.def || 0) * scale),
     str: Math.floor((base.str || 0) * scale),
     vit: Math.floor((base.vit || 0) * scale),
     agi: Math.floor((base.agi || 0) * scale),
-    price: Math.floor(((base.hp || 0) + (base.def || 0) * 8 + 20) * scale),
+    price: Math.floor(
+      ((base.hp || 0) + (base.def || 0) * 8 + (base.atk || 0) * 10 + 20) *
+        scale,
+    ),
   };
   applyRandomOptions(item, stage, optionCount);
   item.price += item.options.reduce((sum, opt) => sum + opt.value * 10, 0);
@@ -1227,6 +1222,7 @@ function loadGame() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!isValidSaveData(parsed)) return null;
+    ensureDungeonStateShape(parsed);
     recalcPlayer(parsed);
     return parsed;
   } catch {
@@ -1325,6 +1321,7 @@ function applyImportedSnapshot(snapshot) {
     throw new Error("save data not found");
   }
   state = imported;
+  ensureDungeonStateShape(state);
   normalizePlayerStats(state);
   ensureEnemy(true);
   markDirty("battle", "dungeon", "bag", "equipment", "status", "visibility");
