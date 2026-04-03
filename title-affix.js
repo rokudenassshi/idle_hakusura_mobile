@@ -22,7 +22,13 @@ const TITLE_AFFIX_TABLE = [
     key: "gale",
     prefix: "疾風の",
     attackIntervalReduction: 0.2,
-    statText: "攻撃速度 -0.2秒",
+    statText: "攻撃間隔 -0.2秒",
+  },
+  {
+    key: "keen",
+    prefix: "会心の",
+    critChanceBonus: 0.2,
+    statText: "クリティカル率 +20%",
   },
 ];
 
@@ -37,6 +43,7 @@ function maybeApplyTitleAffix(item) {
     attackMultiplier: affix.attackMultiplier || 0,
     defMultiplier: affix.defMultiplier || 0,
     attackIntervalReduction: affix.attackIntervalReduction || 0,
+    critChanceBonus: affix.critChanceBonus || 0,
     statText: affix.statText,
   };
   item.price = Math.floor(item.price * 4.5);
@@ -52,6 +59,7 @@ function collectTitleAffixBonus(equipItems) {
       acc.attackMultiplier += titleAffix.attackMultiplier || 0;
       acc.defMultiplier += titleAffix.defMultiplier || 0;
       acc.attackIntervalReduction += titleAffix.attackIntervalReduction || 0;
+      acc.critChanceBonus += titleAffix.critChanceBonus || 0;
       return acc;
     },
     {
@@ -59,6 +67,7 @@ function collectTitleAffixBonus(equipItems) {
       attackMultiplier: 0,
       defMultiplier: 0,
       attackIntervalReduction: 0,
+      critChanceBonus: 0,
     },
   );
 }

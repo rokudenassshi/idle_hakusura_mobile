@@ -511,7 +511,10 @@ function getDerivedStats(sourceState = state) {
   );
   const attackSpeed = 1 / Math.max(0.2, attackInterval);
   const critDamageMultiplier = 1.5 + baseStats.critDamage * 0.03;
-  const crit = Math.min(0.8, 0.05 + baseStats.crit * 0.005 + bonusCrit);
+  const crit = Math.min(
+    0.8,
+    0.05 + baseStats.crit * 0.005 + bonusCrit + titleBonus.critChanceBonus,
+  );
   const evasion = Math.min(0.6, baseStats.evasion * 0.004 + bonusEvasion);
   const lifeSteal = Math.min(0.5, baseStats.lifeSteal * 0.01);
 
