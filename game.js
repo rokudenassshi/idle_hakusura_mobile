@@ -1138,7 +1138,14 @@ function renderBag() {
         actions.push(actionButton("装飾品装備", "equip-accessory", item.id));
       }
     }
-    actions.push(actionButton("売却", "sell", item.id));
+    actions.push(
+      actionButton(item.locked ? "解除" : "ロック", "toggle-lock", item.id),
+    );
+    if (item.locked) {
+      actions.push(statusButton("ロック中"));
+    } else {
+      actions.push(actionButton("売却", "sell", item.id));
+    }
     fragment.appendChild(createItemCard(item, actions));
   });
 
@@ -1147,6 +1154,7 @@ function renderBag() {
 
 function createItemCard(item, actions) {
   const node = els.itemCardTemplate.content.firstElementChild.cloneNode(true);
+  node.classList.toggle("locked", !!item.locked);
   node.querySelector(".item-name").textContent = bagItemName(item);
   const equipLabel = equippedSlotOf(item.id);
   node.querySelector(".item-meta").textContent =
@@ -1162,6 +1170,7 @@ function createItemCard(item, actions) {
 function actionButton(label, action, itemId) {
   const button = document.createElement("button");
   button.textContent = label;
+  if (action === "toggle-lock") button.classList.add("lock-btn");
   button.dataset.action = action;
   button.dataset.itemId = String(itemId);
   return button;
@@ -1232,6 +1241,10 @@ function equippedSlotOf(itemId) {
 
 function isEquipped(itemId) {
   return Object.values(state.equipment).includes(itemId);
+}
+
+function isLocked(itemId) {
+  return !!getItemById(itemId)?.locked;
 }
 
 function slotLabel(slot) {
