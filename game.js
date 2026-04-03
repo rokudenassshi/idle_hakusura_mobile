@@ -914,10 +914,7 @@ function renderBattleSummary() {
   setWidth(els.playerHpBar, `${playerHpRate}%`);
   setText(els.expText, `${state.player.exp} / ${state.player.expToNext}`);
   setWidth(els.expBar, `${expRate}%`);
-  setText(
-    els.toggleBattleBtn,
-    state.autoBattle ? "ダンジョンから出る" : "戦闘開始",
-  );
+  setText(els.toggleBattleBtn, "ダンジョンから出る");
   setText(els.levelText, state.player.level);
   setText(els.playerLevelTop, state.player.level);
   setText(els.goldText, state.gold);
