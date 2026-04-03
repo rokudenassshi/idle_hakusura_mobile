@@ -509,7 +509,7 @@ function getDerivedStats(sourceState = state) {
   const lifeSteal = Math.min(0.5, baseStats.lifeSteal * 0.01);
 
   return {
-    maxHp: 60 + baseStats.maxHp * 8 + equipHp + bonusHp,
+    maxHp: 50 + baseStats.maxHp * 8 + equipHp + bonusHp,
     def: Math.floor(baseStats.def * 1.5 + equipDef),
     attackPower: Math.floor(10 + baseStats.atk * 2 + equipAtk + bonusAtk),
     attackSpeed,
