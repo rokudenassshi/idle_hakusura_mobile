@@ -271,6 +271,7 @@ function mapElements() {
     equipWeaponBtn: byId("equipWeaponBtn"),
     equipArmorBtn: byId("equipArmorBtn"),
     equipAccessoryBtn: byId("equipAccessoryBtn"),
+    sellUnlockedBtn: byId("sellUnlockedBtn"),
     bagList: byId("bagList"),
     saveBtn: byId("saveBtn"),
     resetBtn: byId("resetBtn"),
@@ -304,6 +305,7 @@ function bindEvents() {
   });
 
   els.toggleBattleBtn?.addEventListener("click", toggleBattle);
+  els.sellUnlockedBtn?.addEventListener("click", sellAllUnlockedItems);
   els.saveBtn?.addEventListener("click", () => {
     saveGame();
     addLog("セーブしました。");
@@ -787,6 +789,38 @@ function sellItem(itemId) {
   renderAll();
 }
 
+function getSellableItems(sourceState = state) {
+  return sourceState.bag.filter((item) => {
+    const equipped = Object.values(sourceState.equipment).includes(item.id);
+    return !equipped && !item.locked;
+  });
+}
+
+function sellAllUnlockedItems() {
+  const sellableItems = getSellableItems();
+  if (!sellableItems.length) {
+    addLog("No sellable unequipped items.");
+    return;
+  }
+
+  if (!confirm("装備中とロック中以外のアイテムを一括売却しますか？")) {
+    return;
+  }
+
+  const soldCount = sellableItems.length;
+  const goldEarned = sellableItems.reduce(
+    (sum, item) => sum + Math.max(1, Math.floor(item.price * 0.5)),
+    0,
+  );
+  const sellableIds = new Set(sellableItems.map((item) => item.id));
+  state.bag = state.bag.filter((item) => !sellableIds.has(item.id));
+  state.gold += goldEarned;
+
+  addLog(`${soldCount} items sold. +${goldEarned}G`);
+  markDirty("bag", "equipment", "options");
+  renderAll();
+}
+
 function addStat(statKey, delta = 1) {
   if (!(statKey in state.player.stats)) return;
   if (delta > 0) {
@@ -1111,6 +1145,9 @@ function renderEquipment() {
 
 function renderBag() {
   if (!els.bagList) return;
+  if (els.sellUnlockedBtn) {
+    els.sellUnlockedBtn.disabled = getSellableItems().length === 0;
+  }
 
   if (!state.bag.length) {
     els.bagList.innerHTML = '<div class="empty">バッグは空です。</div>';
