@@ -923,7 +923,7 @@ function createItemCard(item, actions) {
   const equipLabel = equippedSlotOf(item.id);
   node.querySelector('.item-meta').textContent = `${item.slot === 'weapon' ? '武器' : item.slot === 'armor' ? '防具' : '装飾品'}${equipLabel ? ' / ' + equipLabel : ''}`;
   const rarityNode = node.querySelector('.item-rarity');
-  if (rarityNode) rarityNode.textContent = '';
+  if (rarityNode) rarityNode.textContent = item.rarity || '';
   node.querySelector('.item-stats').innerHTML = itemStatText(item);
   const wrap = node.querySelector('.item-actions');
   actions.forEach((button) => wrap.appendChild(button));
@@ -954,19 +954,28 @@ function bagItemName(item) {
 }
 
 function itemStatText(item) {
+  const fixed = [];
+  if (item.atk) fixed.push(`攻撃 +${item.atk}`);
+  if (item.slot === 'weapon' && item.weaponType) fixed.push(`武器種 ${item.weaponType}`);
+  if (item.slot === 'weapon' && item.attackInterval) fixed.push(`攻撃間隔 ${item.attackInterval.toFixed(1)}秒`);
+  if (item.hp) fixed.push(`HP +${item.hp}`);
+  if (item.def) fixed.push(`防御 +${item.def}`);
+  if (item.str) fixed.push(`ちから +${item.str}`);
+  if (item.vit) fixed.push(`たいりょく +${item.vit}`);
+  if (item.int) fixed.push(`かしこさ +${item.int}`);
+  if (item.agi) fixed.push(`すばやさ +${item.agi}`);
+
+  const options = [];
+  if (Array.isArray(item.options) && item.options.length) {
+    item.options.forEach((opt) => options.push(`${opt.label} +${opt.value}`));
+  } else if (item.optionCount) {
+    options.push(`${item.optionCount}個`);
+  }
+
   const lines = [];
-  if (item.atk) lines.push(`攻撃 +${item.atk}`);
-  if (item.slot === 'weapon' && item.weaponType) lines.push(`武器種 ${item.weaponType}`);
-  if (item.slot === 'weapon' && item.attackInterval) lines.push(`攻撃間隔 ${item.attackInterval.toFixed(1)}秒`);
-  if (item.hp) lines.push(`HP +${item.hp}`);
-  if (item.def) lines.push(`防御 +${item.def}`);
-  if (item.str) lines.push(`ちから +${item.str}`);
-  if (item.vit) lines.push(`たいりょく +${item.vit}`);
-  if (item.int) lines.push(`かしこさ +${item.int}`);
-  if (item.agi) lines.push(`すばやさ +${item.agi}`);
-  if (item.optionCount) lines.push(`オプション ${item.optionCount}個`);
-  lines.push(`売値 ${Math.floor(item.price * 0.5)}G`);
-  return lines.join('<br>');
+  if (fixed.length) lines.push(`<div class="stat-inline"><span class="stat-label">固有能力</span><span>${fixed.join(' / ')}</span></div>`);
+  if (options.length) lines.push(`<div class="stat-inline"><span class="stat-label">オプション</span><span>${options.join(' / ')}</span></div>`);
+  return lines.join('');
 }
 
 function equippedSlotOf(itemId) {
