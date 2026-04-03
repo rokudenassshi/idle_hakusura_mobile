@@ -225,10 +225,6 @@ function mapElements() {
     bagList: byId('bagList'),
     bagCountText: byId('bagCountText'),
     statusDungeonText: byId('statusDungeonText'),
-    optionDungeonText: byId('optionDungeonText'),
-    optionStageText: byId('optionStageText'),
-    optionBattleText: byId('optionBattleText'),
-    optionGoldText: byId('optionGoldText'),
     saveBtn: byId('saveBtn'),
     resetBtn: byId('resetBtn'),
     itemCardTemplate: byId('itemCardTemplate'),
@@ -736,11 +732,6 @@ function renderAll() {
     dirty.bag = false;
   }
 
-  if ((currentTab === 'options' && dirty.options) || dirty.visibility) {
-    renderOptions();
-    dirty.options = false;
-  }
-
   dirty.visibility = false;
 }
 
@@ -920,14 +911,6 @@ function renderBag() {
   });
 
   els.bagList.replaceChildren(fragment);
-}
-
-function renderOptions() {
-  if (!els.optionDungeonText) return;
-  els.optionDungeonText.textContent = currentDungeon().name;
-  els.optionStageText.textContent = `${currentStage()}階`;
-  els.optionBattleText.textContent = state.autoBattle ? '戦闘中' : '停止中';
-  els.optionGoldText.textContent = `${state.gold}G`;
 }
 
 function createItemCard(item, actions) {
